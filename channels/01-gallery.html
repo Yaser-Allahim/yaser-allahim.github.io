@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YSR.TV · Channel 01: The Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --wall:   #16140f;
+    --wall2:  #0d0c09;
+    --paper:  #f4f1ea;
+    --ink:    #1b1a17;
+    --gold:   #c8a86a;
+    --dim:    rgba(244,241,234,0.55);
+    --faint:  rgba(244,241,234,0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: 'Space Mono', monospace;
+  }
+
+  #viewport { position: fixed; inset: 0; background: #000; overflow: hidden; }
+  #stage {
+    width: 1920px; height: 1080px;
+    position: absolute; left: 50%; top: 50%;
+    transform-origin: center center;
+    overflow: hidden;
+    background:
+      radial-gradient(95% 80% at 42% 40%, rgba(200,168,106,0.10), transparent 60%),
+      radial-gradient(120% 110% at 50% 50%, var(--wall) 30%, var(--wall2) 100%);
+  }
+
+  /* ---------------- header strip ---------------- */
+  .ghead {
+    position: absolute; top: 44px; left: 60px; z-index: 20;
+  }
+  .ghead .gt {
+    font-family: 'DM Serif Display', serif;
+    font-size: 34px; letter-spacing: 0.04em; color: var(--paper);
+  }
+  .ghead .gsub {
+    margin-top: 6px;
+    font-size: 15px; letter-spacing: 0.22em; color: var(--dim);
+    text-transform: uppercase;
+  }
+  .gcoll {
+    position: absolute; top: 52px; right: 64px; z-index: 20;
+    text-align: right;
+    font-size: 15px; letter-spacing: 0.2em; color: var(--dim);
+    text-transform: uppercase;
+  }
+  .gcoll b { color: var(--gold); font-weight: 400; display: block; margin-top: 5px; }
+
+  /* ---------------- artwork ---------------- */
+  .artzone {
+    position: absolute; left: 0; right: 540px; top: 110px; bottom: 130px;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 5;
+  }
+  .artslot {
+    position: absolute;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.85s ease;
+  }
+  .artslot.on { opacity: 1; }
+  .artslot .frame {
+    background: #f8f6f0;
+    padding: 18px;
+    border: 1px solid #2a261d;
+    box-shadow:
+      0 30px 80px rgba(0,0,0,0.75),
+      0 6px 24px rgba(0,0,0,0.5),
+      inset 0 0 0 1px rgba(0,0,0,0.12);
+  }
+  .artslot img {
+    display: block;
+    max-width: 1060px;
+    max-height: 690px;
+    width: auto; height: auto;
+  }
+
+  /* ---------------- plaque ---------------- */
+  .plaque {
+    position: absolute; right: 96px; bottom: 200px; width: 392px;
+    background: var(--paper);
+    color: var(--ink);
+    padding: 26px 28px 22px;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.65);
+    z-index: 15;
+    opacity: 0; transform: translateY(10px);
+    transition: opacity 0.6s ease 0.25s, transform 0.6s ease 0.25s;
+  }
+  .plaque.on { opacity: 1; transform: translateY(0); }
+  .plaque .pt {
+    font-family: 'DM Serif Display', serif;
+    font-size: 31px; line-height: 1.08; margin-bottom: 12px;
+  }
+  .plaque .pm {
+    font-size: 13px; line-height: 1.7; color: #55524a; letter-spacing: 0.03em;
+  }
+  .plaque .pm b { font-weight: 400; color: var(--ink); }
+  .plaque .pc {
+    margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid #d8d3c6;
+    font-size: 12px; letter-spacing: 0.06em; color: #8a8578;
+  }
+
+  /* ---------------- interstitial cards ---------------- */
+  .gcard {
+    position: absolute; inset: 0; z-index: 18;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; gap: 22px;
+    background:
+      radial-gradient(80% 65% at 50% 45%, rgba(200,168,106,0.08), transparent 65%),
+      radial-gradient(120% 110% at 50% 50%, var(--wall) 30%, var(--wall2) 100%);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.7s ease;
+  }
+  .gcard.on { opacity: 1; }
+  .gcard .ck {
+    font-size: 16px; letter-spacing: 0.34em; color: var(--gold); text-transform: uppercase;
+  }
+  .gcard .ct {
+    font-family: 'DM Serif Display', serif;
+    font-size: 96px; line-height: 1.02; color: var(--paper);
+    max-width: 1400px;
+  }
+  .gcard .ct i { font-style: italic; }
+  .gcard .cm {
+    font-size: 16px; letter-spacing: 0.2em; color: var(--dim); text-transform: uppercase;
+    line-height: 2.1;
+  }
+  .gcard .rule {
+    width: 90px; height: 1px; background: var(--gold); opacity: 0.7;
+  }
+
+  /* ---------------- footer: counter + progress ---------------- */
+  .gfoot {
+    position: absolute; left: 60px; bottom: 56px; right: 64px; z-index: 20;
+    display: flex; align-items: baseline; justify-content: space-between;
+    font-size: 14px; letter-spacing: 0.18em; color: var(--faint); text-transform: uppercase;
+  }
+  #progress {
+    position: absolute; left: 0; bottom: 0; height: 3px; width: 0%;
+    background: var(--gold); opacity: 0.75; z-index: 25;
+  }
+
+  /* ---------------- nav zones ---------------- */
+  .nav {
+    position: absolute; top: 110px; bottom: 130px; width: 180px; z-index: 30;
+    display: flex; align-items: center; cursor: pointer;
+    font-size: 54px; color: var(--paper); opacity: 0;
+    transition: opacity 0.25s ease;
+    user-select: none;
+  }
+  .nav:hover { opacity: 0.55; }
+  #navL { left: 0; justify-content: flex-start; padding-left: 34px; }
+  #navR { right: 0; justify-content: flex-end; padding-right: 34px; }
+
+  /* ---------------- live-site exhibits (Tuwaiq) ---------------- */
+  #launchbtn {
+    position: absolute; left: 0; right: 540px; bottom: 150px; margin: 0 auto;
+    width: max-content; z-index: 22; display: none; align-items: center; gap: 14px;
+    cursor: pointer; padding: 17px 32px; border: 0; border-radius: 11px;
+    background: linear-gradient(135deg, #4f29b7, #7a4ddb); color: #fff;
+    font-family: 'Space Mono', monospace; font-weight: 700; font-size: 23px; letter-spacing: 0.05em;
+    box-shadow: 0 18px 44px rgba(79,41,183,0.5);
+  }
+  #launchbtn.on { display: inline-flex; }
+  #launchbtn:hover { filter: brightness(1.08); }
+  #launchbtn .pill { font-size: 14px; font-weight: 700; padding: 5px 12px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.6); }
+
+  #live { position: fixed; inset: 0; z-index: 90; display: none; flex-direction: column;
+    background: rgba(12,11,8,0.94); padding: 2.5vh 2.5vw; }
+  #live.on { display: flex; }
+  #livechrome { display: flex; align-items: center; gap: 12px; height: 44px; flex: none;
+    padding: 0 14px; background: #2a2622; border-radius: 10px 10px 0 0; border-bottom: 1px solid #000; }
+  #livechrome .dots { display: flex; gap: 7px; flex: none; }
+  #livechrome .dots i { width: 12px; height: 12px; border-radius: 50%; background: #ff5f57; }
+  #livechrome .dots i:nth-child(2) { background: #febc2e; }
+  #livechrome .dots i:nth-child(3) { background: #28c840; }
+  #liveurl { flex: 1; min-width: 0; font-size: 14px; color: #b9b3a6; background: #16130f;
+    padding: 6px 12px; border-radius: 6px; text-align: center; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; }
+  #livepill { flex: none; font-weight: 700; font-size: 11px; letter-spacing: 0.1em; padding: 5px 11px; border-radius: 20px; }
+  #livepill.live { color: #28c840; border: 1px solid #28c840; }
+  #livepill.wip { color: #f4a664; border: 1px solid #f4a664; }
+  #liveclose { flex: none; width: 32px; height: 32px; border: 0; border-radius: 7px; cursor: pointer;
+    background: #16130f; color: #c9c3b5; font-size: 17px; line-height: 1; }
+  #liveclose:hover { background: #8e1f1f; color: #fff; }
+  #liveframe { flex: 1; border: 0; width: 100%; background: #fff; border-radius: 0 0 10px 10px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .artslot, .plaque, .gcard { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <div id="viewport">
+    <div id="stage">
+
+      <div class="ghead">
+        <div class="gt">The Gallery</div>
+        <div class="gsub">selected works · broadcast nightly</div>
+      </div>
+      <div class="gcoll" id="coll"></div>
+
+      <div class="artzone">
+        <div class="artslot" id="slotA"><div class="frame"><img alt="" /></div></div>
+        <div class="artslot" id="slotB"><div class="frame"><img alt="" /></div></div>
+      </div>
+
+      <div class="plaque" id="plaque"></div>
+
+      <button id="launchbtn"><span>▶ open live site</span><span class="pill" id="launchpill"></span></button>
+
+      <div class="gcard" id="gcard"></div>
+
+      <div class="gfoot">
+        <span id="counter"></span>
+        <span>design: yaser allahim — sole designer</span>
+      </div>
+      <div id="progress"></div>
+
+      <div class="nav" id="navL">‹</div>
+      <div class="nav" id="navR">›</div>
+
+    </div>
+  </div>
+
+  <div id="live">
+    <div id="livechrome">
+      <span class="dots"><i></i><i></i><i></i></span>
+      <span id="liveurl"></span>
+      <span id="livepill"></span>
+      <button id="liveclose" title="close">✕</button>
+    </div>
+    <iframe id="liveframe" title="live exhibit" allow="autoplay; fullscreen"></iframe>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =====================================================================
+     THE COLLECTION — edit titles/mediums freely. src is relative to /channels.
+     ===================================================================== */
+  var BASE = "../assets/gallery/";
+  var COLLECTIONS = [];   // loaded from ../assets/gallery/manifest.json — shared with the museum
+
+  var WORK_MS = 9000;
+  var CARD_MS = 4400;
+
+  /* ---------------- build playlist (rebuilt when the manifest arrives) ---------------- */
+  var PLAYLIST = [];
+  var TOTAL_WORKS = 0;
+  function buildPlaylist() {
+    PLAYLIST = [{
+      type: "card", ms: CARD_MS,
+      kicker: "ysr·tv presents",
+      title: 'The <i>Gallery</i>',
+      meta: "selected works · design: yaser allahim<br>the exhibition repeats nightly"
+    }];
+    TOTAL_WORKS = 0;
+    COLLECTIONS.forEach(function (c) {
+      PLAYLIST.push({ type: "card", ms: CARD_MS, kicker: c.kicker, title: c.name, meta: c.meta + " · " + c.works.length + " works" });
+      c.works.forEach(function (w) {
+        TOTAL_WORKS++;
+        PLAYLIST.push({ type: "work", ms: WORK_MS, coll: c, work: w, n: TOTAL_WORKS });
+      });
+    });
+    PLAYLIST.push({
+      type: "card", ms: CARD_MS,
+      kicker: "fin",
+      title: "<i>The exhibition repeats.</i>",
+      meta: "every piece designed by one (1) person · inquiries: ch 03"
+    });
+  }
+  buildPlaylist();
+
+  /* ---------------- elements ---------------- */
+  var stage   = document.getElementById("stage");
+  var slots   = [document.getElementById("slotA"), document.getElementById("slotB")];
+  var plaque  = document.getElementById("plaque");
+  var gcard   = document.getElementById("gcard");
+  var collEl  = document.getElementById("coll");
+  var counter = document.getElementById("counter");
+  var prog    = document.getElementById("progress");
+
+  var launchBtn  = document.getElementById("launchbtn");
+  var launchPill = document.getElementById("launchpill");
+  var liveEl     = document.getElementById("live");
+  var liveFrame  = document.getElementById("liveframe");
+  var liveUrl    = document.getElementById("liveurl");
+  var livePill   = document.getElementById("livepill");
+  var liveClose  = document.getElementById("liveclose");
+
+  var idx = 0, liveSlot = 0, timer = null, playing = false, curLive = null;
+
+  /* live-site exhibits (Tuwaiq) render as a club-purple "screen" you tap to open */
+  function friendlyUrl(work) {
+    if (work.url.indexOf("soon/ar") > -1) return "tuwaiqksu.com/ar";
+    if (work.url.indexOf("soon") > -1)    return "tuwaiqksu.com";
+    var m = work.url.match(/site\/(.*?)\/?$/);
+    return "tuwaiq-club-ksu.github.io/" + ((m && m[1]) ? m[1] : "");
+  }
+  function rr(g, x, y, w, h, r) {
+    g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  }
+  function liveScreen(work, coll) {
+    var portrait = work.device === "mobile";
+    var W = portrait ? 760 : 1280, H = portrait ? 1180 : 800;
+    var c = document.createElement("canvas"); c.width = W; c.height = H;
+    var g = c.getContext("2d");
+    var bg = g.createLinearGradient(0, 0, W, H);
+    bg.addColorStop(0, "#3a1e8a"); bg.addColorStop(0.55, "#4f29b7"); bg.addColorStop(1, "#2a1566");
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    var vg = g.createRadialGradient(W / 2, H * 0.42, H * 0.08, W / 2, H * 0.5, H * 0.9);
+    vg.addColorStop(0, "rgba(163,128,255,0.30)"); vg.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = vg; g.fillRect(0, 0, W, H);
+    g.globalAlpha = 0.06; g.fillStyle = "#000";
+    for (var y = 0; y < H; y += 7) g.fillRect(0, y, W, 3);
+    g.globalAlpha = 1;
+    g.strokeStyle = "rgba(255,255,255,0.16)"; g.lineWidth = 5; g.strokeRect(20, 20, W - 40, H - 40);
+    g.textAlign = "center";
+    g.fillStyle = "#57e3d8"; g.font = "bold 44px 'DM Serif Display', Georgia, serif";
+    g.fillText("TUWAIQ CLUB", W / 2, 120);
+    g.fillStyle = "rgba(237,237,237,0.5)"; g.font = "24px 'Space Mono', monospace";
+    g.fillText("ksu · by tuwaiq academy", W / 2, 160);
+    g.fillStyle = "#fff"; var fs = portrait ? 64 : 78; g.font = "bold " + fs + "px 'DM Serif Display', Georgia, serif";
+    var words = work.t.split(" "), line = "", lines = [];
+    for (var i = 0; i < words.length; i++) {
+      var test = line + words[i];
+      if (g.measureText(test).width > W - 140 && line) { lines.push(line.trim()); line = words[i] + " "; }
+      else line = test + " ";
+    }
+    lines.push(line.trim());
+    var cy = H / 2 - (lines.length - 1) * fs * 0.58;
+    for (var j = 0; j < lines.length; j++) { g.fillText(lines[j], W / 2, cy); cy += fs * 1.12; }
+    var wip = !!work.wip;
+    var bw = portrait ? 400 : 440, bh = 64, bx = W / 2 - bw / 2, by = H - (portrait ? 300 : 240);
+    g.fillStyle = wip ? "rgba(244,166,100,0.16)" : "rgba(87,227,216,0.16)";
+    g.strokeStyle = wip ? "#f4a664" : "#57e3d8"; g.lineWidth = 3; rr(g, bx, by, bw, bh, 12); g.fill(); g.stroke();
+    g.fillStyle = wip ? "#f4a664" : "#57e3d8"; g.font = "bold 30px 'Space Mono', monospace";
+    g.fillText(wip ? "▞ WORK IN PROGRESS" : "● LIVE · INTERACTIVE", W / 2, by + 42);
+    g.fillStyle = "rgba(255,255,255,0.92)"; g.font = "bold 38px 'Space Mono', monospace";
+    g.fillText("▶  TAP TO OPEN", W / 2, H - (portrait ? 150 : 130));
+    g.fillStyle = "rgba(237,237,237,0.45)"; g.font = "22px 'Space Mono', monospace";
+    g.fillText(wip ? "in development" : "shipped · live", W / 2, H - (portrait ? 100 : 85));
+    return c.toDataURL();
+  }
+
+  function preload(i) {
+    var item = PLAYLIST[(i + PLAYLIST.length) % PLAYLIST.length];
+    if (item.type === "work" && !item.work.live) { var im = new Image(); im.src = encodeURI(BASE + item.work.f); }
+  }
+
+  function setProgress(ms) {
+    prog.style.transition = "none";
+    prog.style.width = "0%";
+    void prog.offsetWidth;
+    prog.style.transition = "width " + ms + "ms linear";
+    prog.style.width = "100%";
+  }
+
+  function render(item) {
+    if (item.type === "card") {
+      gcard.innerHTML =
+        '<div class="ck">' + item.kicker + '</div>' +
+        '<div class="rule"></div>' +
+        '<div class="ct">' + item.title + '</div>' +
+        '<div class="cm">' + item.meta + '</div>';
+      gcard.classList.add("on");
+      plaque.classList.remove("on");
+      collEl.innerHTML = "";
+      counter.textContent = "";
+      launchBtn.classList.remove("on"); curLive = null;
+      return;
+    }
+
+    gcard.classList.remove("on");
+
+    var next = 1 - liveSlot;
+    var img = slots[next].querySelector("img");
+    if (item.work.live) {
+      img.src = liveScreen(item.work, item.coll);
+      curLive = item.work;
+      launchPill.textContent = item.work.wip ? "✶ WIP" : "● LIVE";
+      launchBtn.classList.add("on");
+    } else {
+      img.src = encodeURI(BASE + item.work.f);
+      curLive = null;
+      launchBtn.classList.remove("on");
+    }
+    img.alt = item.work.t;
+
+    function swap() {
+      slots[next].classList.add("on");
+      slots[liveSlot].classList.remove("on");
+      liveSlot = next;
+    }
+    if (img.complete) swap();
+    else { img.onload = swap; img.onerror = swap; }
+
+    plaque.classList.remove("on");
+    void plaque.offsetWidth;
+    plaque.innerHTML =
+      '<div class="pt">' + item.work.t + '</div>' +
+      '<div class="pm"><b>' + item.coll.name + '</b><br>' + item.work.m + '<br>' + item.coll.meta.split("·")[1].trim() + '</div>' +
+      '<div class="pc">design: yaser allahim · sole designer</div>';
+    plaque.classList.add("on");
+
+    collEl.innerHTML = item.coll.kicker + '<b>' + item.coll.name + '</b>';
+    counter.textContent = "exhibit " + String(item.n).padStart(2, "0") + " / " + TOTAL_WORKS;
+  }
+
+  function show(i, manual) {
+    idx = ((i % PLAYLIST.length) + PLAYLIST.length) % PLAYLIST.length;
+    var item = PLAYLIST[idx];
+    render(item);
+    preload(idx + 1);
+    clearTimeout(timer);
+    if (playing) {
+      setProgress(item.ms);
+      timer = setTimeout(function () { show(idx + 1); }, item.ms);
+    } else if (manual) {
+      prog.style.transition = "none";
+      prog.style.width = "0%";
+    }
+  }
+
+  document.getElementById("navR").addEventListener("click", function () { show(idx + 1, true); });
+  document.getElementById("navL").addEventListener("click", function () { show(idx - 1, true); });
+
+  /* ---------------- live-site embeds (Tuwaiq) ---------------- */
+  function openLive(work) {
+    Channel.pause();
+    liveFrame.src = work.url;
+    liveUrl.textContent = friendlyUrl(work);
+    livePill.className = work.wip ? "wip" : "live";
+    livePill.textContent = work.wip ? "✶ WIP" : "● LIVE";
+    liveEl.classList.add("on");
+  }
+  function closeLive() {
+    liveEl.classList.remove("on");
+    liveFrame.src = "about:blank";
+    Channel.play();
+  }
+  launchBtn.addEventListener("click", function () { if (curLive) openLive(curLive); });
+  liveClose.addEventListener("click", closeLive);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && liveEl.classList.contains("on")) closeLive();
+  });
+
+  /* ---------------- viewport scaling ---------------- */
+  function fit() {
+    var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    stage.style.transform = "translate(-50%,-50%) scale(" + s + ")";
+  }
+  window.addEventListener("resize", fit);
+  fit();
+  if (window.ResizeObserver) new ResizeObserver(fit).observe(document.documentElement);
+
+  /* ---------------- channel play/pause API ---------------- */
+  var Channel = {
+    isPlaying: false,
+    play() {
+      fit();
+      if (this.isPlaying) return;
+      this.isPlaying = true;
+      playing = true;
+      show(idx);
+    },
+    pause() {
+      if (!this.isPlaying) return;
+      this.isPlaying = false;
+      playing = false;
+      clearTimeout(timer);
+      prog.style.transition = "none";
+      prog.style.width = "0%";
+    },
+    toggle() { this.isPlaying ? this.pause() : this.play(); }
+  };
+  window.YSRChannel = Channel;
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) Channel.pause(); else Channel.play();
+  });
+  window.addEventListener("message", function (e) {
+    var d = e.data || {};
+    if (d.type !== "channel" && d.channel == null) return;
+    var action = d.action || d.channel;
+    if (action === "play" || action === "show" || action === "enter") Channel.play();
+    else if (action === "pause" || action === "hide" || action === "leave") Channel.pause();
+  });
+
+  /* ---------------- boot ---------------- */
+  var params = new URLSearchParams(location.search);
+  show(0, true);
+  if (location.protocol !== "file:") {
+    fetch(BASE + "manifest.json", { cache: "no-store" })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { COLLECTIONS = d.collections || []; buildPlaylist(); show(0, true); })
+      .catch(function () {});
+  }
+  if (params.get("paused") === "1" || params.get("static") === "1") Channel.pause();
+  else Channel.play();
+})();
+</script>
+</body>
+</html>

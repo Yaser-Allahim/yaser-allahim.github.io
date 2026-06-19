@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CH 13 — Uncanny Golf</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#0b0b0d;}</style>
+</head>
+<body>
+<!-- Yaser's "Uncanny Cube Golf", mounted as a channel. It builds its own canvas,
+     loads Howler from a CDN for sound (runs silent if offline), and pulls meme
+     art from ../tuwaiq/Useful Assets/memes/ (MEME_PATH retargeted in golf.js).
+     ESC/P pause in-game; an on-screen exit button surfs away. -->
+<script src="../games/golf.js"></script>
+<script>
+(function () {
+  var started = false, visible = true, volume = 1;
+  /* push the current audio state into Howler whenever it (eventually) exists */
+  function applyAudio() {
+    if (typeof window.Howler === 'undefined') return;
+    Howler.mute(!visible || volume <= 0);
+    Howler.volume(Math.max(0, Math.min(1, volume)));
+  }
+  function exit() {
+    started = false;
+    try { parent.postMessage({ type: 'shellkey', key: 'space' }, '*'); } catch (e) {}
+  }
+  function start() {
+    if (started || !window.TuwaiqGolf) return;
+    started = true;
+    window.TuwaiqGolf.init(exit);
+  }
+  /* forward [g] (channel guide); golf owns ESC/P (pause) and the mouse */
+  window.addEventListener('keydown', function (e) {
+    if (e.key && e.key.toLowerCase() === 'g') {
+      e.preventDefault(); e.stopImmediatePropagation();
+      try { parent.postMessage({ type: 'shellkey', key: 'g' }, '*'); } catch (x) {}
+    }
+  }, true);
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.type !== 'channel') return;
+    if (d.action === 'play') { visible = true; start(); }
+    else if (d.action === 'pause') visible = false;   // a hidden iframe freezes rAF; this just mutes
+    if (typeof d.volume === 'number') volume = d.volume;
+    applyAudio();
+  });
+  window.YSRChannel = { play: function () { visible = true; start(); applyAudio(); },
+                        pause: function () { visible = false; applyAudio(); } };
+  /* Howler is fetched async from a CDN — keep asserting state until it lands */
+  var tries = 0, poll = setInterval(function () {
+    if (typeof window.Howler !== 'undefined') { applyAudio(); clearInterval(poll); }
+    else if (++tries > 40) clearInterval(poll);
+  }, 250);
+  if (document.readyState === 'complete') start();
+  else window.addEventListener('load', start);
+})();
+</script>
+</body>
+</html>

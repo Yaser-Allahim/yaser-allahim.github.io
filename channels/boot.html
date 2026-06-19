@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YSR.TV · System Boot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;1,6..96,500;1,6..96,700&family=Archivo+Black&family=Oswald:wght@400;500;600&family=Roboto+Slab:wght@500;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* warm-grey corporate screen */
+    --grey:      #e7e7e3;
+    --grey-deep: #dadad4;
+    --sony-blue: #1a1f8e;       /* deep brand blue for the wordmark */
+
+    /* diamond gradient (the iconic warm look) */
+    --dia-a: #ffd21f;           /* gold  */
+    --dia-b: #ff7a16;           /* orange */
+    --dia-c: #e3122b;           /* red   */
+
+    --logo-red:  #e8232e;       /* the standing 3D Y */
+    --logo-grey: #8d8d8d;       /* "YSR.TV" wordmark grey */
+
+    --stageW: 1920px;
+    --stageH: 1080px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- viewport scaler ---------- */
+  #viewport {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    overflow: hidden;
+  }
+  /* absolute + translate centering: grid/flex anchor top-left once the
+     viewport is smaller than the fixed 1920x1080 stage */
+  #stage {
+    width: var(--stageW);
+    height: var(--stageH);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
+    overflow: hidden;
+    background: #000;
+  }
+
+  /* ================================================================= SCENES */
+  .scene {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.55s ease;   /* snappier cuts = a real black beat between scenes */
+    will-change: opacity;
+  }
+  .scene.in { opacity: 1; }
+
+  /* -------------------------------------------------- SCENE 1 : grey screen */
+  .scene1 {
+    background:
+      radial-gradient(135% 120% at 50% 42%, var(--grey) 0%, var(--grey) 55%, var(--grey-deep) 100%);
+    display: grid;
+    grid-template-rows: 1fr auto 1fr;
+    place-items: center;
+  }
+
+  .s1-word {
+    grid-row: 1;
+    align-self: end;
+    font-family: 'Roboto Slab', Georgia, serif;
+    font-weight: 800;
+    font-size: 142px;
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-indent: 0.04em;
+    color: var(--sony-blue);
+    margin-bottom: 44px;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .s1-word.in { opacity: 1; }
+
+  /* ---- the diamond mark ----
+     starts as ONE solid diamond; the front piece scales down toward the top
+     corner, revealing the notched body beneath — the gap between them is the Y */
+  .s1-diamond {
+    grid-row: 2;
+    position: relative;
+    width: 380px;
+    height: 380px;
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    transform: scale(0.16);
+    /* pop in (NOT a fade): opacity snaps on, the mark scales up with overshoot */
+    transition: transform 0.42s cubic-bezier(.18,1.5,.45,1), opacity 0.05s linear;
+    filter: drop-shadow(0 18px 26px rgba(120,30,0,0.22));
+  }
+  .s1-diamond.in { opacity: 1; transform: scale(1); }
+  .s1-diamond svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+  /* SVG colours via CSS (var() is unreliable inside presentation attributes) */
+  .dst-a { stop-color: var(--dia-a); }
+  .dst-b { stop-color: var(--dia-b); }
+  .dst-c { stop-color: var(--dia-c); }
+
+  /* the body is hidden under the front piece until the split */
+  .dia-front {
+    transform-origin: 220px 18px;      /* the TOP corner */
+    transition: transform 0.62s cubic-bezier(.72,0,.22,1);
+    filter: drop-shadow(0 5px 7px rgba(110,15,0,0.25));
+  }
+  /* 0.47 leaves a thin seam; the gold stem below keeps the Y connected */
+  .s1-diamond.split .dia-front { transform: scale(0.47); }
+
+  /* trademark sits off the lower-right edge of the mark */
+  .dia-tm {
+    position: absolute;
+    right: 18px;
+    bottom: 76px;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--sony-blue);
+    opacity: 0;
+    transition: opacity 0.6s ease 0.45s;
+  }
+  .s1-diamond.split .dia-tm { opacity: 1; }
+
+  .s1-sub {
+    grid-row: 3;
+    align-self: start;
+    margin-top: 44px;
+    font-family: Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    color: var(--sony-blue);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+  .s1-sub.in { opacity: 1; }
+  /* CREATIVE big; ENTERTAINMENT smaller but tracked to the same width */
+  .s1-sub .l1 { font-size: 58px; letter-spacing: 0.20em; text-indent: 0.20em; line-height: 1; }
+  .s1-sub .l2 { font-size: 31px; letter-spacing: 0.345em; text-indent: 0.345em; line-height: 1.55; }
+
+  /* -------------------------------------------------- SCENE 2 : black screen */
+  .scene2 {
+    background: #000;
+    display: grid;
+    grid-template-rows: 1fr auto auto 1fr;
+    place-items: center;
+    padding-top: 40px;
+  }
+
+  /* logo lockup : chunky 3D "Y" standing, "TV" lying flat at its feet,
+     swooshed and tri-coloured the way the console logo letters lie */
+  .s2-logo {
+    grid-row: 2;
+    position: relative;
+    width: 640px;
+    height: 430px;
+    display: grid;
+    place-items: center;
+    perspective: 900px;
+    perspective-origin: 50% 8%;
+  }
+
+  /* soft ground pool so the lockup sits ON something */
+  .logo-ground {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    width: 480px;
+    height: 90px;
+    transform: translateX(-50%);
+    background: radial-gradient(50% 50% at 50% 50%, rgba(120,40,40,0.28) 0%, rgba(0,0,0,0) 70%);
+    opacity: 0;
+    transition: opacity 0.8s ease 0.4s;
+  }
+  .s2-logo.in .logo-ground { opacity: 1; }
+
+  .logo-tv {
+    position: absolute;
+    left: calc(50% - 22px);
+    bottom: 30px;
+    transform: translateX(-50%) rotateX(72deg) skewX(-9deg);
+    transform-origin: center bottom;
+    font-family: 'Archivo Black', Arial, sans-serif;
+    font-size: 165px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    z-index: 3;             /* the flat letters pass in FRONT of the Y's feet */
+    opacity: 0;
+    transition: opacity 0.5s ease 0.34s;
+  }
+  .s2-logo.in .logo-tv { opacity: 1; }
+  /* gradient-filled lying letters: gold/orange T, teal→blue V (the console palette) */
+  .logo-tv .t {
+    background: linear-gradient(112deg, #ffe24a 8%, #ffb40a 45%, #ff7a16 90%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 3px 3px 0 rgba(140,90,0,0.55), 6px 6px 0 rgba(95,60,0,0.45),
+                 10px 12px 18px rgba(0,0,0,0.55);
+  }
+  .logo-tv .v {
+    background: linear-gradient(112deg, #45e8c8 6%, #2bb1e0 40%, #2752ff 78%, #1a2bb8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-left: 0.04em;
+    text-shadow: 3px 3px 0 rgba(10,30,110,0.55), 6px 6px 0 rgba(6,18,75,0.45),
+                 10px 12px 18px rgba(0,0,0,0.55);
+  }
+
+  .logo-y {
+    position: relative;
+    z-index: 2;
+    font-family: 'Archivo Black', Arial, sans-serif;
+    font-size: 330px;
+    line-height: 1;
+    color: var(--logo-red);
+    transform: translateY(80px) scale(0.7);
+    opacity: 0;
+    /* right-back extrude, like the standing console letter */
+    text-shadow:
+      3px 2px 0 #c4161f, 6px 4px 0 #b5131c, 9px 6px 0 #a61119,
+      12px 8px 0 #970f16, 15px 10px 0 #880d14, 18px 12px 0 #790b11,
+      21px 14px 0 #6a090e, 24px 16px 0 #5b070c, 27px 18px 0 #4b0509,
+      30px 26px 36px rgba(0,0,0,0.7);
+    transition: transform 0.85s cubic-bezier(.16,.9,.28,1) 0.18s, opacity 0.5s ease 0.18s;
+  }
+  .s2-logo.in .logo-y { transform: none; opacity: 1; }
+
+  .s2-word {
+    grid-row: 3;
+    font-family: 'Bodoni Moda', Georgia, serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 78px;
+    letter-spacing: 0.01em;
+    color: var(--logo-grey);
+    margin-top: 6px;
+    opacity: 0;
+    transition: opacity 0.7s ease;
+  }
+  .s2-word.in { opacity: 1; }
+  .s2-word .reg { font-size: 24px; vertical-align: super; margin-left: 4px; font-style: normal; }
+
+  .s2-foot {
+    grid-row: 4;
+    align-self: center;
+    text-align: center;
+    color: #c9c9c9;
+  }
+  .s2-legal {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 30px;
+    line-height: 1.45;
+    letter-spacing: 0.02em;
+    opacity: 0;
+    transition: opacity 0.7s ease;
+  }
+  .s2-legal.in { opacity: 1; }
+  .s2-legal .scee { display: block; margin-top: 18px; letter-spacing: 0.16em; }
+
+  .s2-load {
+    margin-top: 40px;
+    font-family: 'Oswald', Helvetica, Arial, sans-serif;
+    font-weight: 500;
+    font-size: 26px;
+    letter-spacing: 0.30em;
+    text-indent: 0.30em;
+    color: #6f6f6f;
+    opacity: 0;
+    transition: opacity 0.7s ease;
+  }
+  .s2-load.in { opacity: 1; }
+  .s2-load .dots i {
+    opacity: 0.25;
+    animation: loadDot 1.2s steps(1) infinite;
+  }
+  .s2-load .dots i:nth-child(2) { animation-delay: 0.4s; }
+  .s2-load .dots i:nth-child(3) { animation-delay: 0.8s; }
+  @keyframes loadDot { 0%,33% { opacity: 1; } 34%,100% { opacity: 0.25; } }
+
+  /* ================================================================= CRT GLASS */
+  .crt {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 60;
+  }
+  .crt .scan {
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(to bottom,
+      rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1.5px,
+      transparent 3px, transparent 4.5px);
+    mix-blend-mode: multiply;
+    opacity: 0.5;
+  }
+  .crt .vig {
+    position: absolute; inset: 0;
+    background: radial-gradient(125% 120% at 50% 50%, transparent 64%, rgba(0,0,0,0.6) 100%);
+  }
+  .crt .roll {
+    position: absolute; left: 0; right: 0; height: 180px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%);
+    animation: rollBar 7s linear infinite;
+  }
+  @keyframes rollBar { 0% { top: -200px; } 100% { top: 1100px; } }
+  .crt .flick {
+    position: absolute; inset: 0;
+    background: #fff;
+    mix-blend-mode: overlay;
+    opacity: 0;
+    animation: flicker 0.18s steps(2) infinite;
+  }
+  @keyframes flicker { 0%,100% { opacity: 0; } 50% { opacity: 0.022; } }
+
+  #stage.no-crt .crt { display: none; }
+  #stage.paused .crt .roll,
+  #stage.paused .crt .flick,
+  #stage.paused .s2-load .dots i { animation-play-state: paused; }
+
+  /* phosphor glow */
+  #stage.glow .s1-word,
+  #stage.glow .s1-sub { text-shadow: 0 0 14px rgba(26,31,142,0.45); }
+  #stage.glow .scene2 .s2-word { text-shadow: 0 0 16px rgba(180,180,180,0.4); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .s1-diamond { transition: opacity 0.6s ease; transform: none; }
+    .s1-diamond.in { transform: none; }
+    .dia-front { transition: none; }
+    .logo-y { transition: opacity 0.6s ease; transform: none; }
+    .s2-logo.in .logo-y { transform: none; }
+    .s1-word, .s1-sub { transform: none; }
+    .crt .roll, .crt .flick { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <div id="viewport">
+    <div id="stage" class="glow">
+
+      <!-- ================= SCENE 1 : YASER CREATIVE ENTERTAINMENT ================= -->
+      <div class="scene scene1" id="scene1">
+        <div class="s1-word" id="s1word">YASER</div>
+
+        <div class="s1-diamond" id="diamond">
+          <svg viewBox="0 0 440 440" aria-label="YASER diamond mark">
+            <defs>
+              <linearGradient id="diaGrad" x1="0.5" y1="0" x2="0.5" y2="1">
+                <stop class="dst-a" offset="0" />
+                <stop class="dst-b" offset="0.52" />
+                <stop class="dst-c" offset="1" />
+              </linearGradient>
+              <!-- the revealed body: red shoulders, gold column down the middle —
+                   the gold IS the Y's stem -->
+              <linearGradient id="diaBody" x1="0" y1="0.5" x2="1" y2="0.5">
+                <stop class="dst-c" offset="0" />
+                <stop class="dst-b" offset="0.30" />
+                <stop class="dst-a" offset="0.50" />
+                <stop class="dst-b" offset="0.70" />
+                <stop class="dst-c" offset="1" />
+              </linearGradient>
+              <linearGradient id="diaShine" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0"   stop-color="#ffffff" stop-opacity="0.55" />
+                <stop offset="0.4" stop-color="#ffffff" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+
+            <!-- BODY : the big diamond with its top quadrant notched out (the V) -->
+            <polygon points="18,220 119,119 220,220 321,119 422,220 220,422"
+                     fill="url(#diaBody)" />
+
+            <!-- FRONT : full diamond; shrinks to the top corner, becoming the head of the Y -->
+            <g class="dia-front">
+              <polygon points="220,18 422,220 220,422 18,220" fill="url(#diaGrad)" />
+              <polygon points="220,18 422,220 220,220 18,220" fill="url(#diaShine)" />
+            </g>
+          </svg>
+          <div class="dia-tm">&trade;</div>
+        </div>
+
+        <div class="s1-sub" id="s1sub">
+          <span class="l1">CREATIVE</span>
+          <span class="l2">ENTERTAINMENT</span>
+        </div>
+      </div>
+
+      <!-- ================= SCENE 2 : YSR.TV STANDING LOGO ================= -->
+      <div class="scene scene2" id="scene2">
+        <div class="s2-logo" id="s2logo">
+          <div class="logo-ground"></div>
+          <div class="logo-tv"><span class="t">T</span><span class="v">V</span></div>
+          <div class="logo-y">Y</div>
+        </div>
+
+        <div class="s2-word" id="s2word">YSR.TV<span class="reg">&reg;</span></div>
+
+        <div class="s2-foot">
+          <div class="s2-legal" id="s2legal">
+            Licensed by<br />
+            Yaser Creative Entertainment
+            <span class="scee">YCEE&trade;</span>
+          </div>
+          <div class="s2-load" id="s2load">
+            NOW LOADING&nbsp;&middot;&nbsp;THE DESIGN MUSEUM<span class="dots"><i>.</i><i>.</i><i>.</i></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= CRT GLASS ================= -->
+      <div class="crt">
+        <div class="roll"></div>
+        <div class="scan"></div>
+        <div class="vig"></div>
+        <div class="flick"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =====================================================================
+     TIMELINE  (seconds; plays ONCE then freezes on black — pass ?loop=1
+     while designing to keep it cycling)
+     ===================================================================== */
+  const DUR = 13.6;
+  const LOOP = new URLSearchParams(location.search).get("loop") === "1";
+
+  const el = {
+    stage:   document.getElementById("stage"),
+    scene1:  document.getElementById("scene1"),
+    scene2:  document.getElementById("scene2"),
+    s1word:  document.getElementById("s1word"),
+    diamond: document.getElementById("diamond"),
+    s1sub:   document.getElementById("s1sub"),
+    s2logo:  document.getElementById("s2logo"),
+    s2word:  document.getElementById("s2word"),
+    s2legal: document.getElementById("s2legal"),
+    s2load:  document.getElementById("s2load")
+  };
+
+  // window helper: toggle .in while t is inside [a,b)
+  function win(node, t, a, b, cls) {
+    node.classList.toggle(cls || "in", t >= a && t < b);
+  }
+
+  function update(t) {
+    /* ---- SCENE 1 ---- */
+    win(el.scene1,  t, 0.45, 5.95);
+    win(el.s1word,  t, 2.75, 5.85);
+    win(el.diamond, t, 1.15, 5.95);
+    el.diamond.classList.toggle("split", t >= 2.15 && t < 5.95);
+    win(el.s1sub,   t, 3.10, 5.85);
+
+    /* ---- SCENE 2 ---- */
+    win(el.scene2,  t, 6.95, 12.85);
+    win(el.s2logo,  t, 7.05, 12.70);
+    win(el.s2word,  t, 8.15, 12.70);
+    win(el.s2legal, t, 8.80, 12.70);
+    win(el.s2load,  t, 9.40, 12.70);
+  }
+
+  /* ---- audio cue scheduling (fires when the clock crosses a threshold) ---- */
+  const CUES = [
+    { at: 2.15, fn: function () { Audio.diamond(); } },
+    { at: 6.30, fn: function () { Audio.discRead(); } },
+    { at: 7.05, fn: function () { Audio.standUp(); } },
+    { at: 9.40, fn: function () { Audio.loadBlip(); } }
+  ];
+  let prevT = 0;
+  function fireCues(t) {
+    if (t < prevT) prevT = -1;        // looped — reset so the first cue can fire again
+    for (let i = 0; i < CUES.length; i++) {
+      const c = CUES[i];
+      if (prevT < c.at && t >= c.at) c.fn();
+    }
+    prevT = t;
+  }
+
+  /* ===================================== master clock (rAF) ===================================== */
+  let clock = 0, last = performance.now(), playing = true, done = false;
+
+  function finish() {
+    done = true;
+    playing = false;
+    update(DUR);                       // everything off — hold on black
+    try { parent.postMessage({ type: "boot", action: "done" }, "*"); } catch (e) {}
+    try { window.dispatchEvent(new CustomEvent("ysrboot:done")); } catch (e) {}
+  }
+
+  function frame(now) {
+    const dt = (now - last) / 1000;
+    last = now;
+    if (playing) {
+      clock = clock + dt;
+      if (clock >= DUR) {
+        if (LOOP) clock %= DUR;
+        else { finish(); requestAnimationFrame(frame); return; }
+      }
+      update(clock);
+      if (Audio.enabled) fireCues(clock);
+    }
+    requestAnimationFrame(frame);
+  }
+  update(0);
+  requestAnimationFrame(frame);
+
+  /* ===================================== WEB AUDIO (original, muted by default) =================
+     No samples — every tone is synthesised. Two signature cues:
+       • diamond()  : a warm major shimmer as the mark splits
+       • standUp()  : a tall, reverberant chord swell as the 3D Y rises
+  ============================================================================================== */
+  const Audio = {
+    ctx: null,
+    master: null,
+    verb: null,
+    enabled: false,
+
+    init: function () {
+      if (this.ctx) return;
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AC();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.9;
+      this.master.connect(this.ctx.destination);
+
+      // simple synthesised reverb tail
+      this.verb = this.ctx.createConvolver();
+      this.verb.buffer = this.makeImpulse(2.6, 2.4);
+      const vg = this.ctx.createGain();
+      vg.gain.value = 0.85;
+      this.verb.connect(vg).connect(this.master);
+    },
+
+    makeImpulse: function (seconds, decay) {
+      const rate = this.ctx.sampleRate;
+      const len = Math.floor(rate * seconds);
+      const buf = this.ctx.createBuffer(2, len, rate);
+      for (let ch = 0; ch < 2; ch++) {
+        const d = buf.getChannelData(ch);
+        for (let i = 0; i < len; i++) {
+          d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+        }
+      }
+      return buf;
+    },
+
+    // a single voice: osc -> gain (ADSR-ish) -> [dry + reverb send]
+    voice: function (freq, opt) {
+      opt = opt || {};
+      const ctx = this.ctx, t0 = ctx.currentTime + (opt.delay || 0);
+      const osc = ctx.createOscillator();
+      osc.type = opt.type || "triangle";
+      osc.frequency.value = freq;
+      if (opt.detune) osc.detune.value = opt.detune;
+
+      const g = ctx.createGain();
+      const peak = opt.gain == null ? 0.18 : opt.gain;
+      const atk = opt.atk == null ? 0.25 : opt.atk;
+      const rel = opt.rel == null ? 1.6 : opt.rel;
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(peak, t0 + atk);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + atk + rel);
+
+      // gentle low-pass so it stays soft
+      const lp = ctx.createBiquadFilter();
+      lp.type = "lowpass";
+      lp.frequency.value = opt.cut || 4200;
+
+      osc.connect(g).connect(lp);
+      lp.connect(this.master);
+      if (opt.send !== 0) {
+        const s = ctx.createGain();
+        s.gain.value = opt.send == null ? 0.5 : opt.send;
+        lp.connect(s).connect(this.verb);
+      }
+      osc.start(t0);
+      osc.stop(t0 + atk + rel + 0.1);
+    },
+
+    // Cue 1 — warm shimmer (A major-ish, bright glint on top)
+    diamond: function () {
+      if (!this.enabled) return;
+      this.voice(220.0, { type: "triangle", gain: 0.16, atk: 0.5, rel: 1.8, send: 0.4 }); // A3
+      this.voice(277.2, { type: "triangle", gain: 0.13, atk: 0.6, rel: 1.8, detune: 3 }); // C#4
+      this.voice(329.6, { type: "sine",     gain: 0.12, atk: 0.6, rel: 1.9 });            // E4
+      this.voice(659.3, { type: "sine",     gain: 0.10, atk: 0.02, rel: 1.2, delay: 0.55, cut: 7000 }); // E5 glint
+    },
+
+    // Cue 2 — the tall reverberant swell as the logo stands up
+    standUp: function () {
+      if (!this.enabled) return;
+      this.voice(73.42, { type: "sine",     gain: 0.22, atk: 0.18, rel: 2.6, send: 0.2, cut: 1600 }); // D2 sub
+      this.voice(146.8, { type: "triangle", gain: 0.18, atk: 0.30, rel: 2.8, send: 0.6 }); // D3
+      this.voice(220.0, { type: "triangle", gain: 0.15, atk: 0.40, rel: 2.8, send: 0.6, detune: -4 }); // A3 (5th)
+      this.voice(293.7, { type: "sine",     gain: 0.13, atk: 0.45, rel: 3.0, send: 0.7 }); // D4 (oct)
+      this.voice(370.0, { type: "sine",     gain: 0.10, atk: 0.60, rel: 3.0, send: 0.8, delay: 0.15 }); // F#4 (3rd)
+      // soft noise whoosh
+      const ctx = this.ctx, t0 = ctx.currentTime;
+      const n = ctx.createBufferSource();
+      n.buffer = this.makeImpulse(1.2, 1.0);
+      const ng = ctx.createGain();
+      ng.gain.setValueAtTime(0.0001, t0);
+      ng.gain.exponentialRampToValueAtTime(0.06, t0 + 0.5);
+      ng.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.6);
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass"; bp.frequency.value = 900; bp.Q.value = 0.7;
+      n.connect(bp).connect(ng).connect(this.verb);
+      n.start(t0); n.stop(t0 + 1.7);
+    },
+
+    // disc seek in the dark between the two scenes: motor hum + a few head ticks
+    discRead: function () {
+      if (!this.enabled || !this.ctx) return;
+      const ctx = this.ctx, t0 = ctx.currentTime;
+      const hum = ctx.createOscillator();
+      hum.type = "sine"; hum.frequency.value = 62;
+      const hg = ctx.createGain();
+      hg.gain.setValueAtTime(0.0001, t0);
+      hg.gain.exponentialRampToValueAtTime(0.05, t0 + 0.12);
+      hg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.7);
+      hum.connect(hg).connect(this.master);
+      hum.start(t0); hum.stop(t0 + 0.8);
+      for (let i = 0; i < 4; i++) {
+        const tt = t0 + 0.08 + i * (0.10 + i * 0.025);
+        const n = ctx.createBufferSource();
+        n.buffer = this.makeImpulse(0.05, 0.4);
+        const ng = ctx.createGain();
+        ng.gain.setValueAtTime(0.045, tt);
+        ng.gain.exponentialRampToValueAtTime(0.0001, tt + 0.05);
+        const bp = ctx.createBiquadFilter();
+        bp.type = "bandpass"; bp.frequency.value = 2100; bp.Q.value = 1.4;
+        n.connect(bp).connect(ng).connect(this.master);
+        n.start(tt); n.stop(tt + 0.06);
+      }
+    },
+
+    // tiny "ready" blip under the loading line
+    loadBlip: function () {
+      if (!this.enabled) return;
+      this.voice(880, { type: "square", gain: 0.05, atk: 0.01, rel: 0.12, cut: 3000, send: 0.2 });
+      this.voice(1174, { type: "square", gain: 0.045, atk: 0.01, rel: 0.12, cut: 3000, delay: 0.13, send: 0.2 });
+    },
+
+    setEnabled: function (on) {
+      if (on) {
+        this.init();
+        if (this.ctx.state === "suspended") this.ctx.resume();
+        this.enabled = true;
+        prevT = clock;   // don't retro-fire cues we've already passed
+      } else {
+        this.enabled = false;
+      }
+    }
+  };
+
+  /* ===================================== audio: always on =====================================
+     the TV owns the volume globally — no local mute button. The context may start
+     suspended under autoplay policy; the first gesture (or the shell's) unlocks it. */
+  Audio.setEnabled(true);
+  function unlockAudio() {
+    if (Audio.ctx && Audio.ctx.state === "suspended") Audio.ctx.resume();
+  }
+  document.addEventListener("pointerdown", unlockAudio);
+  document.addEventListener("keydown", unlockAudio);
+
+  /* ===================================== viewport scaling ===================================== */
+  function fit() {
+    const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    el.stage.style.transform = "translate(-50%, -50%) scale(" + s + ")";
+  }
+  window.addEventListener("resize", fit);
+  fit();
+
+  /* ===================================== channel play/pause API ===================================== */
+  const Channel = {
+    isPlaying: true,
+    play: function () {
+      if (playing || done) return;     // a finished boot stays finished
+      playing = true;
+      last = performance.now();
+      el.stage.classList.remove("paused");
+      this.isPlaying = true;
+      if (Audio.ctx && Audio.enabled && Audio.ctx.state === "suspended") Audio.ctx.resume();
+    },
+    pause: function () {
+      playing = false;
+      el.stage.classList.add("paused");
+      this.isPlaying = false;
+      if (Audio.ctx && Audio.ctx.state === "running") Audio.ctx.suspend();
+    },
+    toggle: function () { playing ? this.pause() : this.play(); },
+    restart: function () {
+      clock = 0; prevT = 0; done = false;
+      playing = true;
+      last = performance.now();
+      el.stage.classList.remove("paused");
+      this.isPlaying = true;
+      update(0);
+    }
+  };
+  window.YSRChannel = Channel;
+
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) Channel.pause(); else Channel.play();
+  });
+  window.addEventListener("message", function (e) {
+    const d = e.data || {};
+    if (d.type !== "channel" && d.channel == null) return;
+    const action = d.action || d.channel;
+    if (action === "play" || action === "show" || action === "enter") Channel.play();
+    else if (action === "pause" || action === "hide" || action === "leave") Channel.pause();
+    if (action === "restart") Channel.restart();
+    if (typeof d.volume === "number" && Audio.master) {
+      Audio.master.gain.value = Math.max(0, Math.min(1, d.volume));   // TV global volume hook
+    }
+  });
+
+  /* if focus lands in this iframe, keep the shell's remote working */
+  document.addEventListener("keydown", function (e) {
+    if (e.code === "Space") { e.preventDefault(); try { parent.postMessage({ type: "shellkey", key: "space" }, "*"); } catch (x) {} }
+    else if (e.code === "KeyG") { try { parent.postMessage({ type: "shellkey", key: "g" }, "*"); } catch (x) {} }
+  });
+
+  /* hooks */
+  window.__bootRestart = function () { Channel.restart(); };
+
+  /* debug-only: freeze the clock at a given second so the class-driven
+     timeline can be verified even when rAF is throttled (background capture) */
+  window.__bootSeek = function (sec) { playing = false; clock = sec; update(sec); };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>YSR·TV</title>
+<meta name="description" content="The portfolio of Yaser Allahim, a designer and front-end developer, built as a small television you can channel-surf.">
+<meta name="author" content="Yaser Allahim">
+<meta name="theme-color" content="#0a0b0e">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:title" content="YSR·TV">
+<meta property="og:description" content="A portfolio disguised as a television. Surf the channels.">
+<meta property="og:url" content="https://yaser-allahim.github.io/">
+<meta property="og:image" content="https://yaser-allahim.github.io/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="YSR·TV">
+<meta name="twitter:description" content="A portfolio disguised as a television. Surf the channels.">
+<meta name="twitter:image" content="https://yaser-allahim.github.io/assets/og-image.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0b0e;
+    --teal:#19b890;
+    --green:#45ff9c;
+    --pink:#ff5c8a;
+    --paper:#f4f1ea;
+    --paper2:#ece7db;
+    --ink:#1b1a17;
+    --inkfade:#6e6a5e;
+    --rule:#c9c3b4;
+    --tvred:#b3382e;
+    --plastic:#101116;
+    --tty:#ffe300;
+    --ttc:#00e0e0;
+    --ttg:#2bd62b;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:var(--plastic);
+    color:#e8e6e1;
+    font-family:'Space Grotesk',sans-serif;
+    overflow:hidden;
+  }
+  #tv{position:fixed;inset:0;background:var(--bg);}
+  .channel{position:absolute;inset:0;display:none;}
+  .channel.active{display:block;}
+  canvas.full{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+  /* ---- screen dressing ---- */
+  #scanlines{
+    position:fixed;inset:0;pointer-events:none;z-index:5;
+    background:repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.14) 2px 4px);
+  }
+  #vignette{
+    position:fixed;inset:0;pointer-events:none;z-index:5;
+    background:radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.5) 100%);
+  }
+
+  /* ---- the set: bezel + chin ---- */
+  #screenmask{
+    position:fixed;left:14px;right:14px;top:14px;bottom:64px;
+    border-radius:18px;
+    box-shadow:0 0 0 200vmax var(--plastic);
+    pointer-events:none;z-index:14;
+  }
+  #screenmask::after{
+    content:'';position:absolute;inset:0;border-radius:18px;
+    border:1px solid rgba(0,0,0,0.65);
+    box-shadow:
+      inset 0 7px 18px rgba(0,0,0,0.6),
+      inset 0 -5px 14px rgba(0,0,0,0.45),
+      inset 6px 0 14px rgba(0,0,0,0.35),
+      inset -6px 0 14px rgba(0,0,0,0.35);
+  }
+  #screenmask::before{
+    content:'';position:absolute;inset:-2px;border-radius:20px;
+    border:1px solid rgba(255,255,255,0.07);
+  }
+  #btop{
+    position:fixed;top:0;left:0;right:0;height:14px;z-index:15;pointer-events:none;
+    background:linear-gradient(to bottom, #2a2c37 0%, #181922 55%, var(--plastic) 100%);
+  }
+  #bleft{
+    position:fixed;top:14px;bottom:64px;left:0;width:14px;z-index:15;pointer-events:none;
+    background:linear-gradient(to right, #20222b, var(--plastic));
+  }
+  #bright{
+    position:fixed;top:14px;bottom:64px;right:0;width:14px;z-index:15;pointer-events:none;
+    background:linear-gradient(to left, #1a1b23, var(--plastic));
+  }
+  #chin{
+    position:fixed;left:0;right:0;bottom:0;height:64px;z-index:16;
+    background:linear-gradient(to bottom, #23252f 0%, #15161c 45%, #0c0d11 100%);
+    border-top:1px solid rgba(255,255,255,0.12);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -10px 16px rgba(0,0,0,0.5);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 22px;gap:12px;
+  }
+  #chinlogo{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    text-align:center;pointer-events:none;
+  }
+  #chinlogo b{
+    display:block;font-family:'Space Mono',monospace;font-weight:700;
+    font-size:15px;letter-spacing:4px;color:#d8d6d0;
+    text-shadow:0 1px 0 rgba(0,0,0,0.8), 0 -1px 0 rgba(255,255,255,0.08);
+  }
+  #chinlogo span{
+    display:block;font-family:'Space Mono',monospace;font-size:7.5px;
+    letter-spacing:2px;color:rgba(232,230,225,0.32);margin-top:2px;
+  }
+  #chinlogo img{
+    display:block;height:46px;width:auto;margin:0 auto;
+    filter:drop-shadow(0 2px 3px rgba(0,0,0,0.85)) drop-shadow(0 0 1px rgba(0,0,0,0.6));
+  }
+  #chinhint{
+    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;
+    color:rgba(232,230,225,0.32);
+  }
+  #chinbtns{display:flex;align-items:center;gap:10px;}
+  .tvbtn{
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;
+    background:linear-gradient(to bottom, #2a2c36, #1a1b22);
+    color:#cfcdc8;border:1px solid rgba(255,255,255,0.18);
+    border-radius:3px;
+    box-shadow:0 1px 2px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+    padding:6px 13px;cursor:pointer;
+  }
+  .tvbtn:hover{background:#e8e6e1;color:#000;}
+  .tvbtn:active{transform:translateY(1px);box-shadow:0 0 1px rgba(0,0,0,0.5);}
+  #led{
+    width:9px;height:9px;border-radius:50%;margin-left:6px;
+    background:var(--green);box-shadow:0 0 10px rgba(69,255,156,0.8);
+  }
+  body.nosignal #led{background:#ff5050;box-shadow:0 0 10px rgba(255,80,80,0.85);}
+
+  /* ---- OSD ---- */
+  #osd{
+    position:fixed;top:34px;right:42px;z-index:10;text-align:right;
+    font-family:'Space Mono',monospace;pointer-events:none;
+    transition:opacity 0.9s ease;
+  }
+  #osd.faded{opacity:0.08;}
+  #osdnum{
+    display:block;color:var(--green);font-size:22px;font-weight:700;letter-spacing:3px;
+    text-shadow:0 0 14px rgba(69,255,156,0.55), 0 1px 2px rgba(0,0,0,0.5);
+    transition:font-size 0.25s ease;transform-origin:right center;
+  }
+  #osd.big #osdnum{font-size:52px;}
+  #osd.dialing #osdnum{font-size:64px;color:#7dffb8;}
+  #osdnum.pop{animation:digitpop 0.2s ease;}
+  @keyframes digitpop{0%{transform:scale(1.4);}100%{transform:scale(1);}}
+  #osdnum .dash{animation:dashblink 0.5s steps(2,start) infinite;}
+  @keyframes dashblink{50%{opacity:0;}}
+  #osdname{
+    display:block;margin-top:2px;color:rgba(232,230,225,0.6);font-size:12px;letter-spacing:3px;
+    text-shadow:0 1px 2px rgba(0,0,0,0.5);
+  }
+
+  /* ---- volume: chin buttons, on-screen meter, mute light ---- */
+  #volgroup{display:flex;gap:6px;}
+  .volbtn{
+    width:30px;padding:6px 0;text-align:center;font-size:15px;line-height:1;
+  }
+  /* green phosphor volume wedge, same look as the channel-number OSD (no panel) */
+  #volosd{
+    position:fixed;left:50%;bottom:84px;transform:translateX(-50%);
+    z-index:40;display:flex;align-items:flex-end;gap:12px;
+    opacity:0;transition:opacity 0.45s ease;pointer-events:none;
+    filter:drop-shadow(0 1px 3px rgba(0,0,0,0.8));
+  }
+  #volosd.show{opacity:1;}
+  #volosd svg{
+    width:23px;height:23px;color:var(--green);flex:0 0 auto;align-self:center;
+    filter:drop-shadow(0 0 5px rgba(69,255,156,0.55));
+  }
+  #volbars{display:flex;align-items:flex-end;gap:4px;height:26px;}
+  #volbars i{
+    width:11px;background:transparent;
+    border:1px solid rgba(69,255,156,0.30);
+    transition:background 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  }
+  #volbars i:nth-child(1){height:9px;}
+  #volbars i:nth-child(2){height:13px;}
+  #volbars i:nth-child(3){height:17px;}
+  #volbars i:nth-child(4){height:21px;}
+  #volbars i:nth-child(5){height:26px;}
+  #volbars i.on{
+    background:var(--green);border-color:var(--green);
+    box-shadow:0 0 7px rgba(69,255,156,0.7);
+  }
+  /* mute light: bottom-right, clear of the top-right channel number; click to unmute */
+  #muteicon{
+    position:fixed;right:42px;bottom:82px;z-index:41;display:none;
+    flex-direction:column;align-items:flex-end;gap:6px;pointer-events:none;
+  }
+  body.muted #muteicon{display:flex;}
+  #muteicon svg{
+    width:23px;height:23px;color:rgba(255,90,90,0.9);
+    filter:drop-shadow(0 0 6px rgba(255,80,80,0.45));
+    pointer-events:auto;cursor:pointer;
+  }
+  #muteicon .mhint{
+    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;
+    color:rgba(232,230,225,0.55);white-space:nowrap;
+    text-shadow:0 1px 2px rgba(0,0,0,0.6);
+    opacity:0;transition:opacity 0.5s ease;
+  }
+  #muteicon.hint .mhint{opacity:1;}
+
+  /* ---- static overlay ---- */
+  #staticcv{
+    position:fixed;inset:0;width:100%;height:100%;z-index:12;display:none;
+    image-rendering:pixelated;
+  }
+
+  /* ---- boot + wrong input ---- */
+  #boot{
+    position:fixed;inset:0;background:#000;z-index:13;
+    display:flex;align-items:center;justify-content:center;
+  }
+  #bootlogo{position:relative;text-align:center;animation:bootin 1.4s ease both;}
+  @keyframes bootin{0%{opacity:0;transform:scale(0.96);}40%{opacity:0;}100%{opacity:1;transform:scale(1);}}
+  #bootlogo b{
+    font-family:'Space Mono',monospace;font-weight:700;font-size:34px;letter-spacing:8px;
+    color:#e8e6e1;text-shadow:0 0 24px rgba(232,230,225,0.35);
+  }
+  #bootlogo img{
+    display:block;height:150px;width:auto;margin:0 auto;
+    filter:brightness(0) invert(1) drop-shadow(0 0 28px rgba(232,230,225,0.45));  /* logo → solid white + glow */
+  }
+  #bootlogo span{
+    position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    margin-top:26px;white-space:nowrap;
+    font-family:'Space Mono',monospace;font-size:10px;
+    letter-spacing:3px;color:rgba(232,230,225,0.4);
+  }
+  #bootdots{margin-top:22px;font-family:'Space Mono',monospace;font-size:10px;color:var(--green);
+    animation:dashblink 0.6s steps(2,start) infinite;letter-spacing:6px;}
+  #bluescr{
+    position:fixed;inset:0;background:#0b2bc0;z-index:13;display:none;
+  }
+  #inputmenu{
+    position:absolute;top:34px;left:42px;display:none;
+    background:rgba(5,9,38,0.92);
+    border:1px solid rgba(255,255,255,0.4);
+    min-width:200px;padding:6px 0 8px;
+    font-family:'Space Mono',monospace;
+    box-shadow:4px 6px 0 rgba(0,0,0,0.25);
+  }
+  .imhead{
+    font-size:11px;letter-spacing:4px;color:rgba(255,255,255,0.55);
+    padding:6px 14px 8px;border-bottom:1px solid rgba(255,255,255,0.25);margin-bottom:6px;
+  }
+  .imrow{
+    display:flex;align-items:center;gap:11px;padding:7px 14px;
+    font-size:13px;letter-spacing:2px;color:#fff;
+  }
+  .imrow svg{width:18px;height:18px;flex:0 0 auto;}
+  .imrow.sel{color:var(--tty);background:rgba(255,227,0,0.14);}
+  .imrow.sel::after{content:'◀';margin-left:auto;font-size:10px;}
+  .bluemsg{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:10px;text-align:center;
+  }
+  .bluemsg b{
+    font-family:'Space Mono',monospace;font-size:34px;letter-spacing:8px;font-weight:700;color:#fff;
+  }
+  .bluemsg p{
+    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.75);
+  }
+
+  /* ============ THE CHANNEL BOOK ============ */
+  #bookwrap{position:fixed;inset:0;z-index:30;pointer-events:none;}
+  #bookdim{
+    position:absolute;inset:0;background:rgba(4,5,7,0.55);
+    opacity:0;transition:opacity 0.4s ease;
+  }
+  #bookwrap.open{pointer-events:auto;}
+  #bookwrap.open #bookdim{opacity:1;}
+  #bookstage{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    perspective:2200px;
+  }
+  #bookscaler{transform-origin:center;}
+  #book{
+    position:relative;
+    width:940px;height:560px;
+    transform:translateY(140vh) rotate(2.5deg);
+    transition:transform 0.5s cubic-bezier(0.2, 0.85, 0.25, 1);
+    filter:drop-shadow(0 30px 50px rgba(0,0,0,0.6));
+  }
+  #bookwrap.open #book{transform:translateY(0) rotate(0deg);}
+
+  .pageface{
+    background:var(--paper);color:var(--ink);
+    padding:24px 26px;overflow:hidden;
+    border:1px solid #d8d2c2;
+  }
+  .baseL,.baseR{position:absolute;top:0;height:100%;width:50%;}
+  .baseL{left:0;border-radius:6px 0 0 6px;
+    background:linear-gradient(to right, var(--paper) 92%, var(--paper2) 100%);}
+  .baseR{right:0;border-radius:0 6px 6px 0;
+    background:linear-gradient(to left, var(--paper) 92%, var(--paper2) 100%);}
+
+  .sheet{
+    position:absolute;left:50%;top:0;width:50%;height:100%;
+    transform-origin:left center;
+    transform-style:preserve-3d;
+  }
+  .sheet .pf,.sheet .pb{
+    position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  }
+  .sheet .pf{
+    border-radius:0 6px 6px 0;
+    background:linear-gradient(to left, var(--paper) 92%, var(--paper2) 100%);
+  }
+  .sheet .pb{
+    transform:rotateY(180deg);
+    border-radius:6px 0 0 6px;
+    background:linear-gradient(to right, var(--paper) 92%, var(--paper2) 100%);
+  }
+
+  /* curl proxy (the bending page) */
+  .curl{
+    position:absolute;left:50%;top:0;width:50%;height:100%;
+    transform-style:preserve-3d;z-index:55;pointer-events:none;
+  }
+  .cseg{
+    position:absolute;left:0;top:0;height:100%;
+    transform-style:preserve-3d;transform-origin:left center;
+  }
+  .cface{
+    position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  }
+  .cback{transform:rotateY(180deg);}
+
+  /* page-turn affordances */
+  #prevtab,#nexttab{
+    position:absolute;top:0;bottom:96px;width:46px;z-index:60;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Mono',monospace;font-size:22px;color:var(--inkfade);
+    opacity:0;transition:opacity 0.2s;
+    user-select:none;
+  }
+  #prevtab{left:0;}
+  #nexttab{right:0;}
+  #prevtab:hover,#nexttab:hover{opacity:1;background:rgba(0,0,0,0.05);}
+  #book:hover #prevtab,#book:hover #nexttab{opacity:0.7;}
+  #prevtab.off,#nexttab.off{display:none;}
+  #flipcorner,#flipcornerL{
+    position:absolute;bottom:0;width:96px;height:96px;z-index:60;
+    cursor:grab;user-select:none;touch-action:none;
+  }
+  #flipcorner{right:0;}
+  #flipcornerL{left:0;}
+  #flipcorner.off,#flipcornerL.off{display:none;}
+  #flipcorner::after{
+    content:'';position:absolute;right:0;bottom:0;width:0;height:0;
+    border-bottom:26px solid var(--paper2);border-left:26px solid transparent;
+    filter:drop-shadow(-2px -2px 3px rgba(0,0,0,0.18));
+    transition:border-width 0.2s;
+  }
+  #flipcorner:hover::after{border-bottom-width:42px;border-left-width:42px;}
+  #flipcornerL::after{
+    content:'';position:absolute;left:0;bottom:0;width:0;height:0;
+    border-bottom:26px solid var(--paper2);border-right:26px solid transparent;
+    filter:drop-shadow(2px -2px 3px rgba(0,0,0,0.18));
+    transition:border-width 0.2s;
+  }
+  #flipcornerL:hover::after{border-bottom-width:42px;border-right-width:42px;}
+
+  /* ---- print typography ---- */
+  .mast{
+    font-family:'DM Serif Display',serif;font-size:36px;line-height:1;
+    letter-spacing:-0.01em;
+  }
+  .mast i{font-style:italic;}
+  .printrule{border:none;border-top:1px solid var(--ink);margin:8px 0;}
+  .printrule.dbl{border-top:3px double var(--ink);}
+  .smallcaps{
+    font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--inkfade);
+  }
+  .pgno{
+    position:absolute;bottom:9px;font-family:'Space Mono',monospace;
+    font-size:9.5px;letter-spacing:2px;color:var(--inkfade);
+  }
+  .pgno.l{left:26px;} .pgno.r{right:26px;}
+
+  .edn{font-family:'DM Serif Display',serif;font-size:14px;line-height:1.55;color:#3a372f;}
+  .edn p{margin-bottom:8px;}
+
+  /* legend */
+  .legend{border:1px solid var(--ink);padding:10px 12px;margin-top:11px;}
+  .legend .lt{font-family:'Space Mono',monospace;font-weight:700;font-size:10px;letter-spacing:2px;margin-bottom:7px;}
+  .legend .lr{
+    display:flex;gap:9px;align-items:baseline;
+    font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:0.4px;
+    color:#55524a;line-height:1.45;margin-bottom:5px;
+  }
+  .legend .lr b{color:var(--ink);white-space:nowrap;font-weight:700;flex:0 0 88px;}
+
+  /* listings */
+  .listing{
+    padding:8px 8px 7px;border-bottom:1px solid var(--rule);cursor:pointer;
+    transition:background 0.15s;
+  }
+  .listing:hover{background:rgba(179,56,46,0.07);}
+  .lhead{display:flex;align-items:baseline;gap:10px;}
+  .lch{
+    font-family:'Space Mono',monospace;font-weight:700;font-size:13px;color:var(--tvred);
+    letter-spacing:1px;white-space:nowrap;
+  }
+  .lname{font-weight:700;font-size:15px;letter-spacing:0.3px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .lsig{font-family:'Space Mono',monospace;font-size:10px;color:var(--inkfade);letter-spacing:1px;white-space:nowrap;}
+  .lsig b{color:var(--ink);font-weight:400;}
+  .ldesc{font-size:11.5px;color:#55524a;margin-top:2px;line-height:1.35;}
+  .ltune{
+    font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:2px;color:var(--tvred);
+    margin-top:3px;opacity:0;transition:opacity 0.15s;
+  }
+  .listing:hover .ltune{opacity:1;}
+
+  /* ads */
+  .adbox{
+    border:2px solid var(--ink);padding:9px 13px;margin-top:10px;text-align:center;
+  }
+  .adbox .adhead{font-family:'DM Serif Display',serif;font-size:17px;}
+  .adbox .adbody{font-size:10.5px;color:#55524a;margin-top:3px;line-height:1.4;}
+  .adbox .adfoot{font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:1.5px;color:var(--inkfade);margin-top:5px;}
+
+  .fullad{display:flex;flex-direction:column;justify-content:center;height:100%;text-align:center;
+    border:3px double var(--ink);padding:20px;}
+  .fullad .bug{font-family:'DM Serif Display',serif;font-size:44px;line-height:1.05;}
+  .fullad .bug em{font-style:italic;color:var(--tvred);}
+  .fullad .tag{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;color:var(--inkfade);margin:14px 0 12px;line-height:2;}
+  .fullad .legal{font-size:9px;color:#a09a8a;line-height:1.5;margin-top:14px;}
+
+  .classified{border:1px solid var(--ink);padding:8px 10px;margin-bottom:8px;}
+  .classified b{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:2px;display:block;margin-bottom:2px;}
+  .classified span{font-size:11.5px;color:#55524a;line-height:1.4;display:block;}
+
+  /* eye doctor */
+  .eyedoc{border:2px solid var(--ink);padding:10px 13px;margin-top:2px;}
+  .eyedoc .edhead{font-family:'DM Serif Display',serif;font-size:17px;text-align:center;}
+  .eyedoc .edsub{font-size:10.5px;color:#55524a;text-align:center;margin:3px 0 9px;line-height:1.4;}
+  .edrow{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:7px;}
+  .edrow .edlab{
+    font-family:'Space Mono',monospace;font-weight:700;font-size:9px;letter-spacing:1.5px;
+    width:100%;margin-bottom:1px;
+  }
+  .chip{
+    font-family:'Space Mono',monospace;font-size:8.5px;letter-spacing:0.5px;
+    border:1px solid var(--ink);background:transparent;color:var(--ink);
+    padding:3px 7px;cursor:pointer;
+  }
+  .chip:hover{background:rgba(27,26,23,0.08);}
+  .chip.sel{background:var(--ink);color:var(--paper);}
+  .eyedoc .edlegal{
+    font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.5px;
+    color:var(--inkfade);margin-top:6px;line-height:1.5;text-align:center;
+  }
+
+  .comingsoon{display:flex;flex-direction:column;height:100%;justify-content:center;text-align:center;gap:14px;}
+  .comingsoon .csbig{font-family:'DM Serif Display',serif;font-size:32px;line-height:1.1;}
+  .comingsoon .csmono{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:1.5px;color:var(--inkfade);line-height:2;}
+  .subcard{border:2px solid var(--ink);padding:13px;margin:0 14px;}
+  .subcard b{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;}
+  .subcard p{font-size:11.5px;color:#55524a;margin-top:5px;line-height:1.45;}
+
+  /* ---- standalone channel documents (channels/*.html) ----
+     iframes mount to the visible glass (inside bezel, above chin),
+     so embedded channels measure and center against what's actually seen */
+  #ch01,#ch02,#ch03{background:#000;}
+  .channel iframe.chframe{
+    position:absolute;left:14px;top:14px;
+    width:calc(100% - 28px);height:calc(100% - 78px);
+    border:0;display:block;background:#000;
+  }
+  /* the console-boot overlay sits on top of the museum frame until it finishes */
+  .channel iframe.bootframe{display:none;z-index:5;}
+  .channel iframe.bootframe.on{display:block;}
+
+  /* ---- ch 00 professional ---- */
+  #ch00{background:var(--paper);color:var(--ink);overflow:auto;}
+  .pro{max-width:620px;margin:0 auto;padding:9vh 28px 150px;}
+  .pro .label{
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:3px;color:#8a8578;
+    margin-bottom:28px;
+  }
+  .pro h1{font-size:44px;font-weight:700;letter-spacing:-0.02em;}
+  .pro .sub{font-size:17px;color:#55524a;margin:10px 0 40px;line-height:1.5;}
+  .pro h3{
+    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:3px;font-weight:700;
+    color:#8a8578;margin:36px 0 14px;border-bottom:1px solid #d8d3c6;padding-bottom:8px;
+  }
+  .pro .item{display:flex;justify-content:space-between;gap:16px;padding:9px 0;font-size:15px;}
+  .pro .item em{font-style:normal;color:#8a8578;font-family:'Space Mono',monospace;font-size:12px;white-space:nowrap;}
+  .pro .skills{display:flex;flex-wrap:wrap;gap:8px;}
+  .pro .skills span{
+    font-family:'Space Mono',monospace;font-size:12px;border:1px solid #c9c3b4;padding:5px 12px;
+  }
+  .pro a{color:var(--ink);}
+  .pro .note{
+    margin-top:52px;font-family:'Space Mono',monospace;font-size:12px;line-height:1.8;
+    color:#8a8578;letter-spacing:0.5px;
+  }
+  .pro .avail{
+    display:inline-block;margin:0 0 10px;padding:7px 14px;
+    border:1px solid #b3c39a;background:#eef3e3;color:#44652a;
+    font-family:'Space Mono',monospace;font-size:11.5px;letter-spacing:1px;
+  }
+  .pro .xp{padding:13px 0;border-bottom:1px dotted #d8d3c6;}
+  .pro .xp:last-of-type{border-bottom:0;}
+  .pro .xhead{display:flex;justify-content:space-between;gap:16px;align-items:baseline;}
+  .pro .xrole{font-weight:700;font-size:16px;}
+  .pro .xhead em{font-style:normal;color:#8a8578;font-family:'Space Mono',monospace;font-size:12px;white-space:nowrap;}
+  .pro .xorg{font-family:'Space Mono',monospace;font-size:11.5px;letter-spacing:0.5px;color:#8a8578;margin-top:3px;}
+  .pro .xdesc{font-size:14px;color:#55524a;line-height:1.55;margin-top:7px;}
+  .pro .skillrow{display:flex;gap:12px;align-items:baseline;margin-bottom:10px;}
+  .pro .sklab{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:2px;color:#8a8578;flex:0 0 72px;text-transform:uppercase;}
+  .pro .skillrow .skills{flex:1;}
+
+  /* ---- NS: no signal ---- */
+  #chNS .offmsg{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;pointer-events:none;gap:14px;
+  }
+  #chNS .offmsg b{
+    font-family:'Space Mono',monospace;font-size:40px;letter-spacing:9px;font-weight:700;
+    color:#fff;text-shadow:0 0 18px rgba(255,255,255,0.4);
+  }
+  #chNS .offmsg p{
+    font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.6);
+    max-width:440px;line-height:1.8;
+  }
+
+  /* ---- ch 42: test card (hidden) ---- */
+  #ch42{background:#15161c;}
+  #ch42 .bars{position:absolute;left:0;right:0;top:0;height:62%;display:flex;}
+  #ch42 .bars div{flex:1;}
+  #ch42 .tcbottom{
+    position:absolute;left:0;right:0;bottom:0;height:38%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    text-align:center;padding-bottom:40px;
+  }
+  #ch42 .tcbottom b{
+    font-family:'Space Mono',monospace;font-size:15px;letter-spacing:4px;font-weight:700;color:#e8e6e1;
+  }
+  #ch42 .tcbottom p{
+    font-family:'Space Mono',monospace;font-size:11px;letter-spacing:2px;
+    color:rgba(232,230,225,0.55);line-height:1.9;
+  }
+
+  @media (max-width:700px){
+    #screenmask{left:8px;right:8px;top:8px;bottom:54px;border-radius:12px;}
+    #btop{height:8px;}
+    #bleft,#bright{top:8px;bottom:54px;width:8px;}
+    #chin{height:54px;padding:0 12px;}
+    #chinhint{display:none;}
+    #chinlogo img{height:36px;}
+    #chinlogo span{display:none;}
+    #osd{top:20px;right:22px;}
+    #inputmenu{top:20px;left:22px;min-width:160px;}
+    .pro h1{font-size:32px;}
+    .channel iframe.chframe{left:8px;top:8px;width:calc(100% - 16px);height:calc(100% - 62px);}
+  }
+</style>
+</head>
+<body>
+
+<div id="tv">
+
+  <section class="channel" id="ch00" data-ch="00" data-name="the news">
+    <div class="pro">
+      <div class="label">ch 00 · the news — professional broadcasting</div>
+      <h1>Yaser Allahim</h1>
+      <p class="sub" style="margin-bottom:18px;">UI/UX designer + front-end developer. Computer Science student at King Saud University, Riyadh. Builds interfaces with personality — including the television you are currently watching.</p>
+      <div class="avail">● open to internships &amp; freelance — full-time after graduation (late 2027)</div>
+
+      <h3>education</h3>
+      <div class="xp">
+        <div class="xhead"><span class="xrole">BSc Computer Science</span><em>2023 — late 2027 (expected)</em></div>
+        <div class="xorg">King Saud University · College of Computer Science · Riyadh</div>
+        <div class="xdesc">GPA 4.2 / 5.0</div>
+      </div>
+
+      <h3>experience</h3>
+      <div class="xp">
+        <div class="xhead"><span class="xrole">Front-end developer &amp; designer — Tuwaiq Club</span><em>2026 — present</em></div>
+        <div class="xorg">KSU student club by Tuwaiq Academy · sole designer-developer of the club's web presence</div>
+        <div class="xdesc">Designed and built the live coming-soon page (<a href="https://tuwaiqksu.com">tuwaiqksu.com</a>) — with three fully playable games hidden inside it — and currently building the club's main site.</div>
+      </div>
+      <div class="xp">
+        <div class="xhead"><span class="xrole">Event identity designer — university programs</span><em>2026</em></div>
+        <div class="xorg">sole designer on all three identities</div>
+        <div class="xdesc">HashCode 2026 (competitive-programming event, may 2026): badges, certificates, award stickers, stand and problem sheets. SCC AI Bootcamp (may 2026): the full attendee / presenter / staff material set. Kutwah (Social Culture Club work-placement program): complete identity — logo, social banner and launch posts.</div>
+      </div>
+      <div class="xp">
+        <div class="xhead"><span class="xrole">Phone technician &amp; sales — Sohaib Telecom</span><em>aug — nov 2022</em></div>
+        <div class="xorg">phone repair &amp; retail shop</div>
+        <div class="xdesc">Software-side servicing (data migration, wipes, recovery) plus hardware repairs, sales and register work. Catalogued the full inventory into the POS system, designed the store's logo and business card, and pitched a card-based loyalty discount.</div>
+      </div>
+
+      <h3>selected work</h3>
+      <div class="item"><span>YSR·TV — concept, design &amp; code of this television</span><em>you're watching it</em></div>
+      <div class="item"><span>Pac-Man fan game — ghost AI rebuilt from first principles</span><em>godot · coming to this tv</em></div>
+      <div class="item"><span><a href="https://tuwaiqksu.com">tuwaiqksu.com</a> — a coming-soon page hiding three playable games</span><em>live · js + canvas</em></div>
+      <div class="item"><span>Uncanny Cat Golf · Snake · Cube Clicker — the hidden games</span><em>js · firebase</em></div>
+
+      <h3>competitions</h3>
+      <div class="item"><span>GameBox game jam (Future Technology Club) — learned Unity, then competed with it</span><em>unity</em></div>
+      <div class="item"><span>mini-HashCode sprint — finished every task. didn't win. finished every task.</span><em>algorithms</em></div>
+
+      <h3>skills</h3>
+      <div class="skillrow"><span class="sklab">strong</span><div class="skills"><span>java</span><span>c++</span><span>python</span></div></div>
+      <div class="skillrow"><span class="sklab">working</span><div class="skills"><span>javascript</span><span>rust</span><span>lua</span><span>gdscript</span></div></div>
+      <div class="skillrow"><span class="sklab">web</span><div class="skills"><span>react</span><span>node.js</span><span>astro</span><span>firebase</span></div></div>
+      <div class="skillrow"><span class="sklab">games</span><div class="skills"><span>godot</span><span>unity</span></div></div>
+      <div class="skillrow"><span class="sklab">design</span><div class="skills"><span>figma</span><span>krita</span><span>photopea</span><span>aseprite</span><span>blender (light)</span></div></div>
+
+      <h3>languages</h3>
+      <div class="item"><span>Arabic</span><em>native</em></div>
+      <div class="item"><span>English</span><em>advanced · pte 59 (2023)</em></div>
+
+      <h3>contact</h3>
+      <div class="item"><span><a href="mailto:yaserallahim@gmail.com">yaserallahim@gmail.com</a></span><em>email</em></div>
+      <div class="item"><span><a href="https://github.com/Yaser-Allahim">github.com/Yaser-Allahim</a></span><em>github</em></div>
+      <div class="item"><span><a href="https://www.linkedin.com/in/%D9%8A%D8%A7%D8%B3%D8%B1-%D8%A7%D9%84%D9%84%D8%A7%D8%AD%D9%85-267496318/">linkedin</a></span><em>say hi</em></div>
+      <p class="note">you have reached the professional channel.<br>it is quiet here. nothing spins. nothing is judged.<br>press [space] to resume the nonsense.</p>
+    </div>
+  </section>
+
+  <section class="channel" id="ch01" data-ch="01" data-name="the gallery">
+    <iframe class="chframe" id="ch01frame" src="channels/01-gallery.html" title="CH 01 — The Gallery"></iframe>
+    <!-- PSX console boot: plays once per power-on, over the museum, then hands off -->
+    <iframe class="chframe bootframe" id="bootframe" title="System Boot"></iframe>
+  </section>
+
+  <section class="channel" id="ch02" data-ch="02" data-name="teletext">
+    <iframe class="chframe" id="ch02frame" src="channels/02-teletext.html" title="CH 02 — Teletext"></iframe>
+  </section>
+
+  <section class="channel" id="ch03" data-ch="03" data-name="telehire network">
+    <iframe class="chframe" id="ch03frame" src="channels/03-teleshopping.html" title="CH 03 — TeleHire Network"></iframe>
+  </section>
+
+  <section class="channel" id="ch10" data-ch="10" data-name="the arcade">
+    <!-- ~77MB Godot build: src is set lazily on first tune (see mods['10']) -->
+    <iframe class="chframe" id="ch10frame" title="CH 10 — The Arcade"></iframe>
+  </section>
+
+  <section class="channel" id="ch11" data-ch="11" data-name="snake">
+    <iframe class="chframe" id="ch11frame" title="CH 11 — Snake"></iframe>
+  </section>
+
+  <section class="channel" id="ch12" data-ch="12" data-name="cube clicker">
+    <iframe class="chframe" id="ch12frame" title="CH 12 — Cube Clicker"></iframe>
+  </section>
+
+  <section class="channel" id="ch13" data-ch="13" data-name="uncanny golf">
+    <iframe class="chframe" id="ch13frame" title="CH 13 — Uncanny Golf"></iframe>
+  </section>
+
+  <section class="channel" id="chNS" data-ch="NS" data-name="no signal">
+    <canvas class="full" id="nscv" style="image-rendering:pixelated;"></canvas>
+    <div class="offmsg">
+      <b>NO SIGNAL</b>
+      <p>this channel hasn't been built yet.<br>or it doesn't exist. who's to say.<br>dial elsewhere, or press [space].</p>
+    </div>
+  </section>
+
+  <section class="channel" id="ch42" data-ch="42" data-name="test card">
+    <div class="bars">
+      <div style="background:#b8b8b0;"></div>
+      <div style="background:#b8a83c;"></div>
+      <div style="background:#3ca8a0;"></div>
+      <div style="background:#3c9a48;"></div>
+      <div style="background:#a048a0;"></div>
+      <div style="background:#a83c3c;"></div>
+      <div style="background:#3c48a8;"></div>
+    </div>
+    <div class="tcbottom">
+      <b>YSR·TV — TEST TRANSMISSION</b>
+      <p>you weren't supposed to find this channel.<br>it's not in the book. it's not on the schedule.<br>tell no one. — the engineer</p>
+    </div>
+  </section>
+
+</div>
+
+<div id="scanlines"></div>
+<div id="vignette"></div>
+
+<div id="osd"><span id="osdnum">CH 01</span><span id="osdname">the pond</span></div>
+
+<div id="volosd">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8 8 0 0 1 0 12"/></svg>
+  <div id="volbars"></div>
+</div>
+<div id="muteicon" title="muted — click or press [m] to unmute">
+  <span class="mhint">press [↑] for sound</span>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M17 9l4 6M21 9l-4 6"/></svg>
+</div>
+
+<canvas id="staticcv"></canvas>
+
+<div id="boot"><div id="bootlogo"><img src="assets/ysrtv-logo.png" alt="YSR·TV"><span>quality nonsense television</span></div></div>
+<div id="bluescr">
+  <div id="inputmenu">
+    <div class="imhead">INPUT</div>
+    <div class="imrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="11" rx="1"/><path d="M8 3l4 4 4-4"/></svg><span>TV</span></div>
+    <div class="imrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="13" r="2.4"/><circle cx="12" cy="13" r="2.4"/><circle cx="19" cy="13" r="2.4"/></svg><span>AV</span></div>
+    <div class="imrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10h18v4l-2.5 2.5h-13L3 14z"/><path d="M7 12.8h10"/></svg><span>HDMI 1</span></div>
+    <div class="imrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 10h18v4l-2.5 2.5h-13L3 14z"/><path d="M7 12.8h10"/></svg><span>HDMI 2</span></div>
+    <div class="imrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V5"/><path d="M12 5l-2.2 2.6M12 5l2.2 2.6"/><path d="M12 16c-3.2 0-5-1.6-5-4"/><path d="M12 13.5c3.2 0 5-1.6 5-4"/><circle cx="7" cy="10.6" r="1.3"/><rect x="15.7" y="7.4" width="2.6" height="2.6"/></svg><span>USB</span></div>
+  </div>
+  <div class="bluemsg">
+    <b>NO SIGNAL</b>
+    <p>check cable connection</p>
+  </div>
+</div>
+
+<div id="screenmask"></div>
+<div id="btop"></div><div id="bleft"></div><div id="bright"></div>
+<div id="chin">
+  <div id="chinhint">[space] surf · [g] channel book · [0-9] dial · [↑↓] volume</div>
+  <div id="chinlogo"><img src="assets/ysrtv-logo.png" alt="YSR·TV"></div>
+  <div id="chinbtns">
+    <div id="volgroup">
+      <button class="tvbtn volbtn" id="voldown" title="volume down [↓]">–</button>
+      <button class="tvbtn volbtn" id="volup" title="volume up [↑]">+</button>
+    </div>
+    <button class="tvbtn" id="bookbtn">channel book</button>
+    <button class="tvbtn" id="surfbtn">surf →</button>
+    <div id="led" title="broadcast status"></div>
+  </div>
+</div>
+
+<!-- ============ THE CHANNEL BOOK ============ -->
+<div id="bookwrap">
+  <div id="bookdim"></div>
+  <div id="bookstage">
+    <div id="bookscaler">
+    <div id="book">
+
+      <div class="baseL pageface">
+        <div class="smallcaps">est. 2025 · circulation: 1</div>
+        <hr class="printrule dbl">
+        <div class="mast">YSR·TV <i>times</i></div>
+        <div class="smallcaps" style="margin-top:5px;">programming guide — issue 001 · price: free with every television</div>
+        <hr class="printrule">
+        <div class="edn" style="margin-top:10px;">
+          <p><i>A note from the broadcaster.</i> Everything on this network is live, unscripted, and held together with duct tape. If a channel is off the air, it isn't broken — it simply hasn't been built yet. — Yaser, station owner &amp; sole employee</p>
+        </div>
+        <div class="legend">
+          <div class="lt">HOW TO READ THIS GUIDE</div>
+          <div class="lr"><b>▮▮▮▮</b><span>signal strength — how stable a broadcast is. full bars: finished. one bar: held together with tape.</span></div>
+          <div class="lr"><b>corner folds</b><span>pinch a bottom corner and drag. right corner turns forward, left corner turns back.</span></div>
+          <div class="lr"><b>[0-9]</b><span>your remote dials any channel — listed or not. most numbers are static. some are... occupied.</span></div>
+          <div class="lr"><b>●</b><span>the led under the screen. green: broadcasting. red: you've wandered into the static.</span></div>
+        </div>
+        <div class="pgno l">page 1 · the masthead</div>
+      </div>
+
+      <div class="baseR pageface">
+        <div class="comingsoon">
+          <div class="smallcaps">paid programming</div>
+          <div class="csbig">Coming soon<br>to YSR·TV</div>
+          <div class="csmono">ch 08 — the movies (awaiting first broadcast)<br>ch 09 — ??? (legal won't let us say)<br>ch 99 — (retired. do not ask.)</div>
+          <div class="subcard">
+            <b>subscribe today</b>
+            <p>To never miss a broadcast, simply never close this tab. That's it. That's the whole subscription model.</p>
+          </div>
+        </div>
+        <div class="pgno r">page 6 · the future</div>
+      </div>
+
+      <div class="sheet" id="sheetB">
+        <div class="pf pageface">
+          <div class="fullad">
+            <div class="smallcaps">advertisement</div>
+            <div class="bug">THE BUG<br><em>FACTORY</em></div>
+            <div class="tag">artisanal bugs · free-range · locally sourced<br>ethically unhandled since 2025</div>
+            <hr class="printrule" style="width:120px;margin:0 auto;">
+            <div class="tag" style="margin-top:12px;">"I came for one bug. I left with twelve."<br>— satisfied customer</div>
+            <div class="legal">now hiring: QA engineer. requirements: someone. anyone.<br>the bug factory is a subsidiary of YSR·TV. side effects may include shipping.</div>
+          </div>
+          <div class="pgno r">page 4 · advertisement</div>
+        </div>
+        <div class="pb pageface">
+          <div class="smallcaps">classifieds &amp; medical</div>
+          <hr class="printrule dbl">
+          <div style="margin-top:9px;">
+            <div class="classified"><b>LOST</b><span>One semicolon. Last seen near line 42. Answers to ";". Reward: the code compiles.</span></div>
+            <div class="classified"><b>HOTLINE</b><span>Is your drawing a giraffe? Call 1-800-GIRAFFE. Our model is standing by, 12% sure.</span></div>
+          </div>
+          <div class="eyedoc">
+            <div class="edhead">Dr. I. C. Clearly, O.D.</div>
+            <div class="edsub">television ophthalmologist · "your eyes called. i answered." · free prescription below.</div>
+            <div class="edrow">
+              <span class="edlab">LINE THERAPY</span>
+              <button class="chip" data-line="0">i hate lines</button>
+              <button class="chip" data-line="1">fewer lines, please</button>
+              <button class="chip" data-line="2">default</button>
+              <button class="chip" data-line="3">extra lines</button>
+              <button class="chip" data-line="4">I LOVE LINES</button>
+            </div>
+            <div class="edrow">
+              <span class="edlab">STATIC BEHAVIOR</span>
+              <button class="chip" data-still="0">moving (traditional)</button>
+              <button class="chip" data-still="1">still (calmer)</button>
+            </div>
+            <div class="edrow">
+              <span class="edlab">DARK CORNERS</span>
+              <button class="chip" data-vig="1">keep them</button>
+              <button class="chip" data-vig="0">lights on</button>
+            </div>
+            <div class="edlegal">results immediate. prescription stored inside this television. side effects: none. that's the point.</div>
+          </div>
+          <div class="pgno l">page 5 · classifieds</div>
+        </div>
+      </div>
+
+      <div class="sheet" id="sheetA">
+        <div class="pf pageface">
+          <div class="smallcaps">tonight's programming · all times approximate</div>
+          <hr class="printrule dbl">
+          <div style="margin-top:8px;">
+            <div class="listing" data-ch="00">
+              <div class="lhead"><span class="lch">CH 00</span><span class="lname">the news</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
+              <div class="ldesc">the professional channel — a full CV. clean, quiet, recruiter-safe.</div>
+              <div class="ltune">tune in →</div>
+            </div>
+            <div class="listing" data-ch="01">
+              <div class="lhead"><span class="lch">CH 01</span><span class="lname">the gallery</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
+              <div class="ldesc">tonight: selected works. badges, identities, certificates. the artist is also the security guard.</div>
+              <div class="ltune">tune in →</div>
+            </div>
+            <div class="listing" data-ch="02">
+              <div class="lhead"><span class="lch">CH 02</span><span class="lname">teletext</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
+              <div class="ldesc">the station's text service — blog pages in seven authentic colours. start at page 100.</div>
+              <div class="ltune">tune in →</div>
+            </div>
+            <div class="listing" data-ch="03">
+              <div class="lhead"><span class="lch">CH 03</span><span class="lname">telehire network</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
+              <div class="ldesc">THE YASER™, 2027 model. brand new, only one in stock. operators (him) standing by.</div>
+              <div class="ltune">tune in →</div>
+            </div>
+          </div>
+          <div class="adbox">
+            <div class="adhead">Watching nothing?</div>
+            <div class="adbody">Pinch the corner of this page and drag. Go on. It turns.</div>
+            <div class="adfoot">a public service announcement</div>
+          </div>
+          <div class="pgno r">page 2 · listings</div>
+        </div>
+        <div class="pb pageface">
+          <div class="smallcaps">tonight's programming · continued</div>
+          <hr class="printrule dbl">
+          <div style="margin-top:8px;">
+            <div class="listing" data-ch="10">
+              <div class="lhead"><span class="lch">CH 10</span><span class="lname">the arcade</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
+              <div class="ldesc">a maze, a yellow circle, four ghosts legal won't let us name. built from scratch — mistaken for the original.</div>
+              <div class="ltune">tune in →</div>
+            </div>
+            <div class="listing" data-ch="11">
+              <div class="lhead"><span class="lch">CH 11</span><span class="lname">snake</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
+              <div class="ldesc">the classic, with a live global high-score board. arrows to steer, [esc] to walk away. the leaderboard remembers.</div>
+              <div class="ltune">tune in →</div>
+            </div>
+            <div class="listing" data-ch="12">
+              <div class="lhead"><span class="lch">CH 12</span><span class="lname">cube clicker</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
+              <div class="ldesc">click the cube. the number goes up. it saves your progress — that's the trap. a full idle game living on channel 12.</div>
+              <div class="ltune">tune in →</div>
+            </div>
+            <div class="listing" data-ch="13">
+              <div class="lhead"><span class="lch">CH 13</span><span class="lname">uncanny golf</span><span class="lsig">signal <b>▮▮▮</b>▮</span></div>
+              <div class="ldesc">minigolf, but the physics took something personal. a cube, a hole, and a creeping sense of wrongness.</div>
+              <div class="ltune">tune in →</div>
+            </div>
+            <div class="listing" id="rumorlisting">
+              <div class="lhead"><span class="lch">CH ??</span><span class="lname">rumored</span><span class="lsig">signal lost</span></div>
+              <div class="ldesc">somewhere in the static, a channel is said to broadcast.</div>
+              <div class="ltune">dial at random →</div>
+            </div>
+          </div>
+          <div class="pgno l">page 3 · listings</div>
+        </div>
+      </div>
+
+      <div id="prevtab">‹</div>
+      <div id="nexttab">›</div>
+      <div id="flipcorner" title="drag to turn forward"></div>
+      <div id="flipcornerL" class="off" title="drag to turn back"></div>
+
+    </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+
+const ORDER = ['01','02','03','10','11','12','13','00'];
+let cur = 0;
+let activeCh = null;
+let booted = false;
+const mods = {};
+
+/* ---------- eye doctor settings ---------- */
+const EYES_KEY = 'ysrtv-eyes';
+let eyes = {lines: 2, still: false, vignette: true};
+const savedEyes = localStorage.getItem(EYES_KEY);
+try{ Object.assign(eyes, JSON.parse(savedEyes) || {}); }catch(e){}
+// first-time visitors who ask the OS for less motion get the static held still
+if(!savedEyes && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+  eyes.still = true;
+}
+const LINE_LEVELS = [
+  {a: 0,    g: '2px', h: '4px'},
+  {a: 0.07, g: '2px', h: '4px'},
+  {a: 0.14, g: '2px', h: '4px'},
+  {a: 0.26, g: '2px', h: '4px'},
+  {a: 0.55, g: '3px', h: '6px'}
+];
+function applyEyes(){
+  const L = LINE_LEVELS[eyes.lines] || LINE_LEVELS[2];
+  $('#scanlines').style.background = L.a === 0 ? 'none' :
+    'repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0 ' + L.g + ', rgba(0,0,0,' + L.a + ') ' + L.g + ' ' + L.h + ')';
+  $('#vignette').style.display = eyes.vignette ? 'block' : 'none';
+  document.querySelectorAll('[data-line]').forEach(b => b.classList.toggle('sel', +b.dataset.line === eyes.lines));
+  document.querySelectorAll('[data-still]').forEach(b => b.classList.toggle('sel', (b.dataset.still === '1') === eyes.still));
+  document.querySelectorAll('[data-vig]').forEach(b => b.classList.toggle('sel', (b.dataset.vig === '1') === eyes.vignette));
+  try{ localStorage.setItem(EYES_KEY, JSON.stringify(eyes)); }catch(e){}
+}
+document.querySelectorAll('[data-line]').forEach(b => b.onclick = () => { eyes.lines = +b.dataset.line; applyEyes(); Sound.scribble(); });
+document.querySelectorAll('[data-still]').forEach(b => b.onclick = () => { eyes.still = b.dataset.still === '1'; applyEyes(); Sound.scribble(); });
+document.querySelectorAll('[data-vig]').forEach(b => b.onclick = () => { eyes.vignette = b.dataset.vig === '1'; applyEyes(); Sound.scribble(); });
+applyEyes();
+
+/* ---------- sound: the TV's audio, all synthesized (no asset files) ---------- */
+const Sound = (function(){
+  const VOL_KEY = 'ysrtv-vol', LAST_KEY = 'ysrtv-lastvol';
+  let vol = 0;                         // 0..100; first-ever visit starts muted (autoplay policy)
+  try{ const s = localStorage.getItem(VOL_KEY); if(s !== null) vol = Math.max(0, Math.min(100, +s)); }catch(e){}
+  let lastVol = 60;                    // level restored on unmute; remembered separately
+  try{ const s = localStorage.getItem(LAST_KEY); if(s !== null) lastVol = Math.max(20, Math.min(100, +s)); }catch(e){}
+  let ctx = null, master = null, noiseBuf = null, unlocked = false;
+
+  /* real recordings drop into assets/sfx/ and get listed in its manifest.json.
+     a sound upgrades synth → sample the instant it's listed; unlisted keeps synth.
+     SFX_CFG tunes playback per sound (slice / loop / level); tweak these by ear. */
+  const SFX_CFG = {
+    surf:        { randomTo: 14,  duration: 0.28, gain: 0.50 },  // random slice of the long static
+    hiss:        { loop: true,    gain: 0.45 },                  // no-signal bed
+    ambient:     { loop: true,    gain: 0.08 },                  // faint always-on room tone (swells in)
+    paper:       { duration: 0.90, gain: 0.80 },
+    click:       { duration: 0.50, gain: 0.90 },                 // 3 variants, lead-trimmed
+    powerOn:     { duration: 0.60, gain: 0.70 },                 // just the switch-click (file has no real degauss)
+    degauss:     { offset: 0.10, duration: 1.80, gain: 0.70 },
+    scribble:    { randomTo: 44, duration: 0.32, gain: 0.70 },   // short stroke from the middle
+    tuningSweep: { duration: 0.35, gain: 0.70 },
+    errorBuzz:   { duration: 0.60, gain: 0.70 }
+  };
+  const buffers = {};
+  let samplesRequested = false;
+
+  function build(){
+    if(ctx) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = vol / 100;
+    master.connect(ctx.destination);
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);   // 1s white noise, reused
+    const d = noiseBuf.getChannelData(0);
+    for(let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    loadSamples();
+  }
+  async function loadSamples(){
+    if(samplesRequested || !ctx) return;
+    samplesRequested = true;
+    let map;
+    try{
+      const r = await fetch('assets/sfx/manifest.json', {cache: 'no-store'});
+      if(!r.ok) return;
+      map = await r.json();                       // { key: "file.mp3" | ["a.mp3","b.mp3"] }
+    }catch(e){ return; }
+    const fileSet = new Set();                                // decode each unique file once
+    for(const k in map) (Array.isArray(map[k]) ? map[k] : [map[k]]).forEach(f => fileSet.add(f));
+    const decoded = {};
+    await Promise.all([...fileSet].map(async file => {        // ...all in parallel
+      try{
+        const res = await fetch('assets/sfx/' + file, {cache: 'force-cache'});
+        if(res.ok) decoded[file] = await ctx.decodeAudioData(await res.arrayBuffer());
+      }catch(e){ /* missing/undecodable → synth fallback */ }
+    }));
+    for(const name in map){
+      const cfg = SFX_CFG[name] || {};
+      const trim = !cfg.loop && cfg.randomTo == null;        // play-from-start sounds: drop dead air
+      const files = Array.isArray(map[name]) ? map[name] : [map[name]];
+      const bufs = [];
+      for(const file of files){
+        if(!decoded[file]) continue;
+        bufs.push(trim ? trimLead(decoded[file]) : decoded[file]);
+      }
+      if(bufs.length) buffers[name] = bufs;                   // always an array of variants
+    }
+    if(wantAmbient) ambient(true);     // a bed requested before its sample decoded can start now
+  }
+  function trimLead(buf){                                     // strip leading silence (the "delay")
+    const d = buf.getChannelData(0), sr = buf.sampleRate, TH = 0.012;
+    let start = 0;
+    for(let i = 0; i < d.length; i++){ if(Math.abs(d[i]) > TH){ start = Math.max(0, i - ((sr * 0.005) | 0)); break; } }
+    if(start <= 0) return buf;
+    const len = buf.length - start, nb = ctx.createBuffer(buf.numberOfChannels, len, sr);
+    for(let c = 0; c < buf.numberOfChannels; c++) nb.getChannelData(c).set(buf.getChannelData(c).subarray(start));
+    return nb;
+  }
+  function playSample(name, opts){
+    const arr = buffers[name];
+    if(!arr || !arr.length || !live()) return null;
+    const buf = arr[(Math.random() * arr.length) | 0];        // random variant (e.g. 3 button presses)
+    const cfg = Object.assign({}, SFX_CFG[name], opts);
+    const s = ctx.createBufferSource(), g = ctx.createGain();
+    s.buffer = buf; s.loop = !!cfg.loop;
+    g.gain.value = cfg.gain != null ? cfg.gain : 0.85;
+    s.connect(g); g.connect(master);
+    let off = cfg.offset || 0;
+    if(cfg.randomTo != null){                                 // pick a random window inside a long clip
+      const hi = Math.min(cfg.randomTo, buf.duration - (cfg.duration || 0.2));
+      off = off + Math.random() * Math.max(0, hi - off);
+    }
+    off = Math.max(0, Math.min(off, buf.duration - 0.02));
+    if(cfg.loop) s.start(0, off);
+    else if(cfg.duration) s.start(0, off, cfg.duration);
+    else s.start(0, off);
+    return s;
+  }
+  function unlock(){                   // call from any user gesture (autoplay policy)
+    build();
+    if(ctx && ctx.state === 'suspended') ctx.resume();
+    if(master) master.gain.setValueAtTime(vol / 100, ctx.currentTime);   // re-assert saved level
+    unlocked = true;
+  }
+  const live = () => unlocked && ctx && vol > 0;
+  function noise(){ const s = ctx.createBufferSource(); s.buffer = noiseBuf; s.loop = true; return s; }
+  function env(g, peak, dur, attack){
+    const t = ctx.currentTime;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(peak, t + (attack || 0.005));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  }
+  function surf(durMs){                // channel-change / no-signal static
+    if(playSample('surf')) return;
+    if(!live()) return;
+    const dur = (durMs || 260) / 1000;
+    const s = noise(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+    bp.type = 'bandpass'; bp.frequency.value = 1700; bp.Q.value = 0.5;
+    s.connect(bp); bp.connect(g); g.connect(master);
+    env(g, 0.18, dur, 0.004);
+    s.start(); s.stop(ctx.currentTime + dur + 0.05);
+  }
+  function blip(){                     // remote dial digit
+    if(!live()) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = 720;
+    o.connect(g); g.connect(master);
+    env(g, 0.10, 0.07, 0.003);
+    o.start(); o.stop(ctx.currentTime + 0.09);
+  }
+  function paper(){                    // channel-book page turn
+    if(playSample('paper')) return;
+    if(!live()) return;
+    const s = noise(), hp = ctx.createBiquadFilter(), g = ctx.createGain();
+    hp.type = 'highpass'; hp.frequency.value = 1400;
+    s.connect(hp); hp.connect(g); g.connect(master);
+    env(g, 0.13, 0.20, 0.006);
+    s.start(); s.stop(ctx.currentTime + 0.26);
+  }
+  function click(){                    // physical button thunk
+    if(playSample('click')) return;
+    if(!live()) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(180, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(90, ctx.currentTime + 0.05);
+    o.connect(g); g.connect(master);
+    env(g, 0.12, 0.06, 0.002);
+    o.start(); o.stop(ctx.currentTime + 0.08);
+  }
+  function setVol(v){
+    vol = Math.max(0, Math.min(100, v));
+    try{ localStorage.setItem(VOL_KEY, vol); }catch(e){}
+    if(vol > 0){ lastVol = vol; try{ localStorage.setItem(LAST_KEY, lastVol); }catch(e){} }
+    if(master) master.gain.setTargetAtTime(vol / 100, ctx.currentTime, 0.02);
+  }
+  function toggleMute(){ setVol(vol > 0 ? 0 : (lastVol || 60)); }
+
+  const ready = () => unlocked && ctx;            // beds: route through master (muting silences)
+  function tone(freq, type, peak, dur, attack){   // generic one-shot tone
+    if(!live()) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    o.connect(g); g.connect(master);
+    env(g, peak, dur, attack);
+    o.start(); o.stop(ctx.currentTime + dur + 0.05);
+  }
+
+  /* --- CRT & power physics --- */
+  function thunk(){                               // power-relay clunk
+    if(!live()) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(120, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + 0.08);
+    o.connect(g); g.connect(master);
+    env(g, 0.22, 0.12, 0.002);
+    o.start(); o.stop(ctx.currentTime + 0.16);
+    const s = noise(), hp = ctx.createBiquadFilter(), cg = ctx.createGain();
+    hp.type = 'highpass'; hp.frequency.value = 2500;
+    s.connect(hp); hp.connect(cg); cg.connect(master);
+    env(cg, 0.10, 0.03, 0.001);
+    s.start(); s.stop(ctx.currentTime + 0.05);
+  }
+  function degauss(){                             // the iconic CRT "bwomp" (pitch drop + wobble)
+    if(playSample('degauss')) return;
+    if(!live()) return;
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(185, t);
+    o.frequency.exponentialRampToValueAtTime(55, t + 0.9);
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(11, t);
+    lfo.frequency.exponentialRampToValueAtTime(4, t + 0.9);
+    lg.gain.value = 0.10; lfo.connect(lg); lg.connect(g.gain);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.20, t + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
+    o.connect(g); g.connect(master);
+    o.start(t); lfo.start(t); o.stop(t + 1.05); lfo.stop(t + 1.05);
+  }
+  function powerOn(){ if(playSample('powerOn')) return; thunk(); degauss(); }
+  function powerOff(){                            // shrink-to-a-dot whine + electrostatic fft
+    if(playSample('powerOff')) return;
+    if(!live()) return;
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(900, t);
+    o.frequency.exponentialRampToValueAtTime(120, t + 0.35);
+    g.gain.setValueAtTime(0.16, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + 0.42);
+    const s = noise(), hp = ctx.createBiquadFilter(), cg = ctx.createGain();
+    hp.type = 'highpass'; hp.frequency.value = 4000;
+    s.connect(hp); hp.connect(cg); cg.connect(master);
+    cg.gain.setValueAtTime(0.0001, t + 0.34);
+    cg.gain.exponentialRampToValueAtTime(0.12, t + 0.37);
+    cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+    s.start(t + 0.34); s.stop(t + 0.52);
+  }
+  let humNodes = null;
+  function humBed(on){                            // faint flyback whine + mains hum (ambient bed)
+    if(on){
+      if(!ready() || humNodes) return;
+      const hi = ctx.createOscillator(), hg = ctx.createGain();
+      hi.type = 'sine'; hi.frequency.value = 15700; hg.gain.value = 0.006;
+      hi.connect(hg); hg.connect(master);
+      const lo = ctx.createOscillator(), lgn = ctx.createGain();
+      lo.type = 'sine'; lo.frequency.value = 60; lgn.gain.value = 0.014;
+      lo.connect(lgn); lgn.connect(master);
+      hi.start(); lo.start();
+      humNodes = [hi, lo];
+    } else if(humNodes){
+      humNodes.forEach(n => { try{ n.stop(); }catch(e){} });
+      humNodes = null;
+    }
+  }
+
+  /* --- signal & static beds --- */
+  let nsNode = null;
+  function nsHiss(on){                            // sustained no-signal snow
+    if(on){
+      if(!ready() || nsNode) return;
+      const samp = playSample('hiss', {loop: true});           // looped recording if present
+      if(samp){ nsNode = samp; return; }
+      const s = noise(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+      bp.type = 'bandpass'; bp.frequency.value = 2200; bp.Q.value = 0.4;
+      s.connect(bp); bp.connect(g); g.connect(master);
+      g.gain.value = 0.09;
+      s.start();
+      nsNode = s;
+    } else if(nsNode){
+      try{ nsNode.stop(); }catch(e){}
+      nsNode = null;
+    }
+  }
+  function tuningSweep(){                          // analog tuner warble
+    if(playSample('tuningSweep')) return;
+    if(!live()) return;
+    const t = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(400, t);
+    o.frequency.linearRampToValueAtTime(1400, t + 0.25);
+    o.frequency.linearRampToValueAtTime(700, t + 0.4);
+    env(g, 0.05, 0.4, 0.01);
+    o.connect(g); g.connect(master);
+    const s = noise(), bp = ctx.createBiquadFilter(), sg = ctx.createGain();
+    bp.type = 'bandpass'; bp.frequency.value = 1800; bp.Q.value = 0.5;
+    s.connect(bp); bp.connect(sg); sg.connect(master);
+    env(sg, 0.06, 0.4, 0.01);
+    o.start(t); o.stop(t + 0.45); s.start(t); s.stop(t + 0.45);
+  }
+  let toneNode = null;
+  function testTone(on){                          // exact 1 kHz test-card tone
+    if(on){
+      if(!ready() || toneNode) return;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 1000; g.gain.value = 0.05;
+      o.connect(g); g.connect(master);
+      o.start();
+      toneNode = o;
+    } else if(toneNode){
+      try{ toneNode.stop(); }catch(e){}
+      toneNode = null;
+    }
+  }
+  let ambientNode = null, wantAmbient = false;
+  function ambient(on){                            // faint always-on TV room tone, swells in like a warming tube
+    wantAmbient = on;                              // remembered so it can start once its file decodes
+    if(on){
+      if(ambientNode || !buffers.ambient || !buffers.ambient.length || !live()) return;
+      const tgt = (SFX_CFG.ambient && SFX_CFG.ambient.gain) || 0.08;
+      const s = ctx.createBufferSource(), g = ctx.createGain();
+      s.buffer = buffers.ambient[0]; s.loop = true;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(tgt, ctx.currentTime + 1.2);
+      s.connect(g); g.connect(master); s.start();
+      ambientNode = s;
+    } else if(ambientNode){ try{ ambientNode.stop(); }catch(e){} ambientNode = null; }
+  }
+
+  /* --- remote & UI feedback --- */
+  function tick(){                                // light remote keypress
+    if(!live()) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square'; o.frequency.value = 1500;
+    o.connect(g); g.connect(master);
+    env(g, 0.05, 0.03, 0.001);
+    o.start(); o.stop(ctx.currentTime + 0.05);
+  }
+  function errorBuzz(){                            // invalid channel
+    if(playSample('errorBuzz')) return;
+    if(!live()) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(220, ctx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.18);
+    o.connect(g); g.connect(master);
+    env(g, 0.11, 0.22, 0.004);
+    o.start(); o.stop(ctx.currentTime + 0.26);
+  }
+  function confirmUp(){ tone(660, 'square', 0.08, 0.08, 0.003); setTimeout(() => tone(990, 'square', 0.08, 0.09, 0.003), 70); }
+  function confirmDown(){ tone(520, 'square', 0.08, 0.10, 0.003); }
+  function scribble(){                            // pencil scratch for the eye-doctor picks
+    if(playSample('scribble')) return;
+    if(!live()) return;
+    const t = ctx.currentTime;
+    const s = noise(), bp = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), lg = ctx.createGain();
+    bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = 0.8;
+    s.connect(bp); bp.connect(g); g.connect(master);
+    lfo.type = 'square'; lfo.frequency.value = 26; lg.gain.value = 0.06;
+    lfo.connect(lg); lg.connect(g.gain);
+    g.gain.setValueAtTime(0.06, t);
+    g.gain.setValueAtTime(0.06, t + 0.15);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+    s.start(t); lfo.start(t); s.stop(t + 0.24); lfo.stop(t + 0.24);
+  }
+
+  /* --- idents & easter eggs --- */
+  function jingle(){                              // tiny YSR·TV ident (C-E-G-C arpeggio)
+    if(!live()) return;
+    [[523,0],[659,0.12],[784,0.24],[1047,0.38]].forEach(([f,d]) => setTimeout(() => tone(f,'triangle',0.10,0.16,0.004), d*1000));
+  }
+  function emergency(){                           // EAS attention tone, 853 + 960 Hz
+    if(!live()) return;
+    const t = ctx.currentTime, dur = 1.2;
+    [853, 960].forEach(f => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = f;
+      o.connect(g); g.connect(master);
+      g.gain.setValueAtTime(0.07, t); g.gain.setValueAtTime(0.07, t + dur);
+      g.gain.linearRampToValueAtTime(0.0001, t + dur + 0.05);
+      o.start(t); o.stop(t + dur + 0.1);
+    });
+  }
+  function breakBumper(){                          // "we'll be right back" sting
+    if(!live()) return;
+    [[392,0],[523,0.14],[392,0.30]].forEach(([f,d]) => setTimeout(() => tone(f,'triangle',0.10,0.18,0.004), d*1000));
+  }
+
+  return {
+    unlock, setVol, toggleMute, get vol(){ return vol; }, get running(){ return !!(ctx && ctx.state === 'running'); },
+    surf, blip, paper, click,
+    thunk, degauss, powerOn, powerOff, humBed,
+    nsHiss, ambient, tuningSweep, testTone,
+    tick, errorBuzz, confirmUp, confirmDown, scribble,
+    jingle, emergency, breakBumper
+  };
+})();
+window.__sound = Sound;   // audition any SFX from the console, e.g. __sound.degauss()
+
+/* volume UI: chin buttons, ↑/↓ keys, on-screen bar, mute light, channel broadcast */
+const volosd = $('#volosd'), volbars = $('#volbars'), muteicon = $('#muteicon');
+for(let i = 0; i < 5; i++) volbars.appendChild(document.createElement('i'));
+const volSquares = volbars.querySelectorAll('i');
+let volHideT;
+function broadcastVolume(){
+  const f = Sound.vol / 100;
+  document.querySelectorAll('#tv iframe').forEach(fr => {
+    try{ fr.contentWindow.postMessage({type: 'channel', volume: f}, '*'); }catch(e){}
+  });
+}
+function renderVol(showBar){
+  const filled = Math.round(Sound.vol / 20);
+  volSquares.forEach((sq, i) => sq.classList.toggle('on', i < filled));
+  document.body.classList.toggle('muted', Sound.vol === 0);
+  if(showBar){
+    volosd.classList.add('show');
+    clearTimeout(volHideT);
+    volHideT = setTimeout(() => volosd.classList.remove('show'), 1500);
+  }
+}
+let powered = false;
+function maybePowerOn(){
+  if(!powered && Sound.vol > 0){ powered = true; Sound.powerOn(); }
+  if(Sound.vol > 0) Sound.ambient(true);   // idempotent; starts once its file has loaded
+}
+function changeVol(dir){
+  Sound.unlock();
+  Sound.setVol(Sound.vol + dir * 20);
+  Sound.tick();
+  maybePowerOn();        // first time the set's audio comes alive: it warms up
+  renderVol(true);
+  broadcastVolume();
+}
+function toggleMute(){
+  Sound.unlock();
+  Sound.toggleMute();
+  (Sound.vol > 0 ? Sound.confirmUp() : Sound.confirmDown());
+  maybePowerOn();
+  renderVol(true);
+  broadcastVolume();
+}
+$('#volup').onclick = () => changeVol(+1);
+$('#voldown').onclick = () => changeVol(-1);
+muteicon.querySelector('svg').onclick = toggleMute;
+/* resume audio on the first interaction and push the volume to channels. autoplay can
+   swallow a single gesture, so keep trying until the context is actually running. */
+const PRIME_EVENTS = ['pointerdown', 'keydown', 'touchstart', 'click'];
+const primeTargets = [];                // window + each channel document we're listening on
+function attachPrime(target){
+  if(!target || primeTargets.indexOf(target) !== -1) return;
+  primeTargets.push(target);
+  PRIME_EVENTS.forEach(ev => target.addEventListener(ev, primeAudio, true));
+}
+function primeAudio(){
+  Sound.unlock();
+  broadcastVolume();
+  maybePowerOn();                       // start room tone (+ power-on cue) once audio is live
+  if(Sound.running){                    // running now, stop listening
+    primeTargets.forEach(t => PRIME_EVENTS.forEach(ev => t.removeEventListener(ev, primeAudio, true)));
+    primeTargets.length = 0;
+  }
+}
+attachPrime(window);
+/* clicks inside a channel iframe never reach this window, so prime from inside each
+   same-origin channel too, with a window-blur check as a fallback for the rest. */
+window.addEventListener('blur', () => {
+  if(!Sound.running && document.activeElement && document.activeElement.tagName === 'IFRAME') primeAudio();
+}, true);
+/* late-loading channels (boot, museum) get the current volume on load */
+document.querySelectorAll('#tv iframe.chframe').forEach(fr =>
+  fr.addEventListener('load', () => {
+    try{ fr.contentWindow.postMessage({type: 'channel', volume: Sound.vol / 100}, '*'); }catch(e){}
+    try{ if(!Sound.running) attachPrime(fr.contentDocument); }catch(e){}   // cross-origin → skip
+  }));
+renderVol(false);
+
+/* ---------- noise ---------- */
+function fillNoise(ctx, w, h, dim){
+  const img = ctx.createImageData(w, h);
+  const d = img.data;
+  const m = dim ? 90 : 255;
+  for(let i = 0; i < d.length; i += 4){
+    const v = (Math.random() * m) | 0;
+    d[i] = v; d[i+1] = v; d[i+2] = v; d[i+3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+const sc = $('#staticcv');
+const sctx = sc.getContext('2d');
+function sizeStatic(){
+  sc.width = 320;
+  sc.height = Math.max(120, Math.round(320 * innerHeight / innerWidth));
+}
+sizeStatic();
+
+function staticBurst(mid, dur){
+  dur = dur || 260;
+  Sound.surf(dur);
+  sc.style.display = 'block';
+  const t0 = performance.now();
+  let swapped = false, done = false;
+  function finish(){
+    if(done) return;
+    done = true;
+    if(!swapped){ swapped = true; mid && mid(); }
+    sc.style.display = 'none';
+  }
+  if(eyes.still){
+    fillNoise(sctx, sc.width, sc.height);
+    setTimeout(() => { if(!swapped){ swapped = true; mid && mid(); } }, dur * 0.45);
+    setTimeout(finish, dur);
+    return;
+  }
+  (function frame(){
+    if(done) return;
+    fillNoise(sctx, sc.width, sc.height);
+    const el = performance.now() - t0;
+    if(el > dur * 0.45 && !swapped){ swapped = true; mid && mid(); }
+    if(el < dur) requestAnimationFrame(frame);
+    else finish();
+  })();
+  setTimeout(finish, dur + 250);
+}
+
+/* ---------- OSD ---------- */
+const osd = $('#osd');
+const osdnum = $('#osdnum');
+let osdT1, osdT2;
+function osdSet(numText, nameText, dialing){
+  clearTimeout(osdT1); clearTimeout(osdT2);
+  osd.classList.remove('faded');
+  osd.classList.toggle('dialing', !!dialing);
+  osd.classList.add('big');
+  osdnum.innerHTML = numText;
+  $('#osdname').textContent = nameText;
+  if(!dialing){
+    osdT1 = setTimeout(() => osd.classList.remove('big'), 1100);
+    osdT2 = setTimeout(() => osd.classList.add('faded'), 3400);
+  }
+}
+function osdPop(){
+  osdnum.classList.remove('pop');
+  void osdnum.offsetWidth;
+  osdnum.classList.add('pop');
+}
+function showOsd(ch){
+  const el = document.querySelector('[data-ch="' + ch + '"]');
+  osdSet('CH ' + ch, el ? el.dataset.name : '', false);
+}
+
+/* ---------- channel manager ---------- */
+function activate(ch){
+  document.querySelectorAll('.channel').forEach(el => {
+    el.classList.toggle('active', el.dataset.ch === ch);
+  });
+}
+/* deep links: normalize a ?ch= value to a real channel code, or null if none exists */
+function deepTarget(raw){
+  if(raw == null) return null;
+  let c = String(raw).trim().toUpperCase();
+  if(c === 'NS') return null;                  // no-signal isn't a place you tune to
+  if(/^\d$/.test(c)) c = '0' + c;              // "1" -> "01"
+  return (ORDER.indexOf(c) >= 0 || c === '42') ? c : null;
+}
+/* keep the address bar pointed at the current channel so a link can be shared */
+function syncUrl(ch){
+  if(!history.replaceState) return;
+  const u = new URL(location.href);
+  if(ch && ch !== 'NS') u.searchParams.set('ch', ch);
+  else u.searchParams.delete('ch');
+  u.searchParams.delete('page');               // page is a load-time hint only
+  history.replaceState(null, '', u);
+}
+function setChannel(ch){
+  staticBurst(() => {
+    if(activeCh && mods[activeCh] && mods[activeCh].stop) mods[activeCh].stop();
+    activate(ch);
+    if(mods[ch] && mods[ch].start) mods[ch].start();
+    activeCh = ch;
+    syncUrl(ch);
+    document.body.classList.toggle('nosignal', ch === 'NS');
+  });
+}
+function flip(toIdx){
+  const n = ORDER.length;
+  toIdx = ((toIdx % n) + n) % n;
+  if(ORDER[toIdx] === activeCh) return;
+  cur = toIdx;
+  setChannel(ORDER[cur]);
+  showOsd(ORDER[cur]);
+}
+
+/* ---------- TV dial ---------- */
+let dialBuf = '', dialTimer;
+function renderDial(){
+  osdSet('CH ' + dialBuf + (dialBuf.length < 2 ? '<span class="dash">‒</span>' : ''), 'tuning…', true);
+  osdPop();
+}
+function pressDigit(d){
+  if(dialBuf.length >= 2) return;
+  Sound.blip();
+  dialBuf += d;
+  renderDial();
+  clearTimeout(dialTimer);
+  dialTimer = setTimeout(commitDial, dialBuf.length === 2 ? 600 : 1200);
+}
+function commitDial(){
+  clearTimeout(dialTimer);
+  const buf = dialBuf;
+  dialBuf = '';
+  if(!buf) return;
+  const ch = buf.length === 2 ? buf : '0' + buf;
+  const i = ORDER.indexOf(ch);
+  if(i >= 0){
+    if(ORDER[i] === activeCh){ showOsd(ch); }
+    else flip(i);
+  } else if(ch === '42'){
+    setChannel('42');
+    osdSet('CH 42', 'test card', false);
+  } else {
+    Sound.errorBuzz();
+    setChannel('NS');
+    osdSet('CH ' + ch, 'no signal', false);
+  }
+}
+function dialTo(ch){
+  dialBuf = '';
+  clearTimeout(dialTimer);
+  pressDigit(ch[0]);
+  setTimeout(() => pressDigit(ch[1]), 450);
+}
+
+/* ---------- THE CHANNEL BOOK ---------- */
+const bookwrap = $('#bookwrap');
+let bookOpen = false;
+const sheets = [$('#sheetA'), $('#sheetB')];
+const flipped = [false, false];
+const PAGE_W = 470, PAGE_H = 560, SEGN = 6, SEGW = PAGE_W / SEGN;
+
+function sizeBook(){
+  const s = Math.min(1, (innerWidth * 0.94) / 940, (innerHeight * 0.80) / 560);
+  $('#bookscaler').style.transform = 'scale(' + s + ')';
+}
+sizeBook();
+window.addEventListener('resize', sizeBook);
+
+function restZ(){
+  sheets.forEach((sh, i) => {
+    sh.style.zIndex = flipped[i] ? (20 + i) : (30 - i);
+  });
+}
+function updateTabs(){
+  const fc = flipped.filter(Boolean).length;
+  $('#prevtab').classList.toggle('off', fc === 0);
+  $('#flipcornerL').classList.toggle('off', fc === 0);
+  $('#nexttab').classList.toggle('off', fc === sheets.length);
+  $('#flipcorner').classList.toggle('off', fc === sheets.length);
+}
+function topUnflipped(){
+  for(let i = 0; i < sheets.length; i++) if(!flipped[i]) return i;
+  return -1;
+}
+function lastFlipped(){
+  for(let i = sheets.length - 1; i >= 0; i--) if(flipped[i]) return i;
+  return -1;
+}
+
+/* --- curl proxy: a 6-segment hinged chain so the page truly bends --- */
+function makeProxy(i){
+  const sh = sheets[i];
+  if(sh._proxy) return sh._proxy;
+  const proxy = document.createElement('div');
+  proxy.className = 'curl';
+  const pf = sh.querySelector('.pf'), pb = sh.querySelector('.pb');
+  const segs = [];
+  let parent = proxy;
+  for(let k = 0; k < SEGN; k++){
+    const seg = document.createElement('div');
+    seg.className = 'cseg';
+    seg.style.width = SEGW + 'px';
+    if(k > 0) seg.style.left = SEGW + 'px';
+    const cf = document.createElement('div');
+    cf.className = 'cface';
+    const fc = pf.cloneNode(true);
+    fc.removeAttribute('id');
+    fc.style.cssText += ';position:absolute;inset:auto;left:' + (-k * SEGW) + 'px;top:0;width:' + PAGE_W + 'px;height:' + PAGE_H + 'px;margin:0;transform:none;border-radius:0;';
+    cf.appendChild(fc);
+    const cb = document.createElement('div');
+    cb.className = 'cface cback';
+    const bc = pb.cloneNode(true);
+    bc.removeAttribute('id');
+    bc.style.cssText += ';position:absolute;inset:auto;left:' + ((k + 1) * SEGW - PAGE_W) + 'px;top:0;width:' + PAGE_W + 'px;height:' + PAGE_H + 'px;margin:0;transform:none;border-radius:0;';
+    cb.appendChild(bc);
+    seg.appendChild(cf);
+    seg.appendChild(cb);
+    parent.appendChild(seg);
+    parent = seg;
+    segs.push(seg);
+  }
+  proxy._segs = segs;
+  sh._proxy = proxy;
+  $('#book').appendChild(proxy);
+  sh.style.visibility = 'hidden';
+  return proxy;
+}
+function killProxy(i){
+  const sh = sheets[i];
+  if(sh._proxy){ sh._proxy.remove(); sh._proxy = null; }
+  sh.style.visibility = 'visible';
+}
+function setCurl(i, p){
+  const sh = sheets[i];
+  const proxy = makeProxy(i);
+  sh._p = p;
+  const bow = Math.sin(p * Math.PI);
+  const C = 55 * bow;
+  const base = -180 * p + C / 2;
+  const dseg = -C / (SEGN - 1);
+  proxy.style.transform = 'translateZ(' + (20 * bow) + 'px) rotateZ(' + (7 * bow) + 'deg)';
+  proxy._segs.forEach((seg, k) => {
+    seg.style.transform = 'rotateY(' + (k === 0 ? base : dseg) + 'deg)';
+  });
+}
+function settle(i){
+  const sh = sheets[i];
+  killProxy(i);
+  sh.style.transform = 'rotateY(' + (flipped[i] ? -180 : 0) + 'deg)';
+  restZ();
+}
+function easeC(u){ return u < 0.5 ? 4*u*u*u : 1 - Math.pow(-2*u + 2, 3) / 2; }
+function animateSheet(i, to, dur, done){
+  const sh = sheets[i];
+  const from = (typeof sh._p === 'number') ? sh._p : (flipped[i] ? 1 : 0);
+  if(sh._anim) cancelAnimationFrame(sh._anim);
+  clearTimeout(sh._safety);
+  const t0 = performance.now();
+  dur = dur || 560;
+  function fin(){
+    sh._anim = null;
+    setCurl(i, to);
+    settle(i);
+    done && done();
+  }
+  function fr(now){
+    const u = Math.min((now - t0) / dur, 1);
+    setCurl(i, from + (to - from) * easeC(u));
+    if(u < 1){ sh._anim = requestAnimationFrame(fr); }
+    else fin();
+  }
+  sh._anim = requestAnimationFrame(fr);
+  sh._safety = setTimeout(() => {
+    if(sh._anim){ cancelAnimationFrame(sh._anim); fin(); }
+  }, dur + 300);
+}
+function flipPageNext(){
+  const i = topUnflipped();
+  if(i < 0) return;
+  flipped[i] = true;
+  Sound.paper();
+  animateSheet(i, 1);
+  updateTabs();
+}
+function flipPagePrev(){
+  const i = lastFlipped();
+  if(i < 0) return;
+  flipped[i] = false;
+  Sound.paper();
+  animateSheet(i, 0);
+  updateTabs();
+}
+$('#nexttab').onclick = flipPageNext;
+$('#prevtab').onclick = flipPagePrev;
+
+/* right corner: hover pre-curl + drag forward */
+(function(){
+  const corner = $('#flipcorner');
+  let dragging = false, idx = -1, startX = 0, pageW = 1, moved = false, hoverIdx = -1;
+  corner.addEventListener('mouseenter', () => {
+    if(dragging) return;
+    const i = topUnflipped();
+    if(i < 0) return;
+    hoverIdx = i;
+    animateSheet(i, 0.045, 180);
+  });
+  corner.addEventListener('mouseleave', () => {
+    if(dragging || hoverIdx < 0) return;
+    if(!flipped[hoverIdx]) animateSheet(hoverIdx, 0, 220);
+    hoverIdx = -1;
+  });
+  corner.addEventListener('pointerdown', e => {
+    idx = topUnflipped();
+    if(idx < 0) return;
+    dragging = true; moved = false;
+    startX = e.clientX;
+    pageW = $('#book').getBoundingClientRect().width / 2;
+    corner.setPointerCapture(e.pointerId);
+    corner.style.cursor = 'grabbing';
+    if(sheets[idx]._anim){ cancelAnimationFrame(sheets[idx]._anim); sheets[idx]._anim = null; }
+    clearTimeout(sheets[idx]._safety);
+    e.preventDefault();
+  });
+  corner.addEventListener('pointermove', e => {
+    if(!dragging) return;
+    const dx = startX - e.clientX;
+    if(Math.abs(dx) > 5) moved = true;
+    const p = Math.min(Math.max(dx / (pageW * 1.6), 0), 1);
+    setCurl(idx, p);
+  });
+  function release(){
+    if(!dragging) return;
+    dragging = false;
+    hoverIdx = -1;
+    corner.style.cursor = 'grab';
+    const p = sheets[idx]._p || 0;
+    if(!moved || p > 0.3){
+      flipped[idx] = true;
+      Sound.paper();
+      animateSheet(idx, 1, moved ? 380 : 560);
+    } else {
+      animateSheet(idx, 0, 320);
+    }
+    updateTabs();
+  }
+  corner.addEventListener('pointerup', release);
+  corner.addEventListener('pointercancel', release);
+})();
+
+/* left corner: hover pre-curl + drag back */
+(function(){
+  const corner = $('#flipcornerL');
+  let dragging = false, idx = -1, startX = 0, pageW = 1, moved = false, hoverIdx = -1;
+  corner.addEventListener('mouseenter', () => {
+    if(dragging) return;
+    const i = lastFlipped();
+    if(i < 0) return;
+    hoverIdx = i;
+    animateSheet(i, 0.955, 180);
+  });
+  corner.addEventListener('mouseleave', () => {
+    if(dragging || hoverIdx < 0) return;
+    if(flipped[hoverIdx]) animateSheet(hoverIdx, 1, 220);
+    hoverIdx = -1;
+  });
+  corner.addEventListener('pointerdown', e => {
+    idx = lastFlipped();
+    if(idx < 0) return;
+    dragging = true; moved = false;
+    startX = e.clientX;
+    pageW = $('#book').getBoundingClientRect().width / 2;
+    corner.setPointerCapture(e.pointerId);
+    corner.style.cursor = 'grabbing';
+    if(sheets[idx]._anim){ cancelAnimationFrame(sheets[idx]._anim); sheets[idx]._anim = null; }
+    clearTimeout(sheets[idx]._safety);
+    e.preventDefault();
+  });
+  corner.addEventListener('pointermove', e => {
+    if(!dragging) return;
+    const dx = e.clientX - startX;
+    if(Math.abs(dx) > 5) moved = true;
+    const p = 1 - Math.min(Math.max(dx / (pageW * 1.6), 0), 1);
+    setCurl(idx, p);
+  });
+  function release(){
+    if(!dragging) return;
+    dragging = false;
+    hoverIdx = -1;
+    corner.style.cursor = 'grab';
+    const p = (typeof sheets[idx]._p === 'number') ? sheets[idx]._p : 1;
+    if(!moved || p < 0.7){
+      flipped[idx] = false;
+      Sound.paper();
+      animateSheet(idx, 0, moved ? 380 : 560);
+    } else {
+      animateSheet(idx, 1, 320);
+    }
+    updateTabs();
+  }
+  corner.addEventListener('pointerup', release);
+  corner.addEventListener('pointercancel', release);
+})();
+
+function openBook(){
+  if(!booted) return;
+  Sound.click();
+  bookOpen = true;
+  bookwrap.classList.add('open');
+}
+function closeBook(){
+  Sound.click();
+  bookOpen = false;
+  bookwrap.classList.remove('open');
+}
+$('#bookbtn').onclick = openBook;
+$('#bookdim').onclick = closeBook;
+$('#surfbtn').onclick = () => { if(booted) flip(cur + 1); };
+
+document.querySelectorAll('.listing[data-ch]').forEach(el => {
+  el.addEventListener('click', () => {
+    const ch = el.dataset.ch;
+    closeBook();
+    setTimeout(() => dialTo(ch), 500);
+  });
+});
+$('#rumorlisting').addEventListener('click', () => {
+  const pool = ['19','27','38','57','78','83'];
+  const ch = pool[(Math.random() * pool.length) | 0];
+  closeBook();
+  setTimeout(() => dialTo(ch), 500);
+});
+
+sheets.forEach(sh => sh.style.transform = 'rotateY(0deg)');
+restZ();
+updateTabs();
+
+/* ---------- standalone channel documents (iframe + postMessage) ---------- */
+function iframeChannel(frameSel){
+  const fr = $(frameSel);
+  const ch = fr.closest('.channel').dataset.ch;
+  function send(msg){
+    try{ fr.contentWindow.postMessage(Object.assign({type: 'channel'}, msg), '*'); }catch(e){}
+  }
+  fr.addEventListener('load', () => { if(activeCh !== ch) send({action: 'pause'}); });
+  return {
+    start(){ send({action: 'play'}); },
+    stop(){ send({action: 'pause'}); },
+    send: send
+  };
+}
+/* ch 01 picks its broadcast: the walkable museum on desktops,
+   the slideshow for touch / reduced-motion viewers (same data, same number) */
+const museumMode = !(window.matchMedia('(pointer: coarse)').matches ||
+                     window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+if(museumMode) $('#ch01frame').src = 'channels/01-museum.html';
+/* channels with captured input (pointer lock) forward shell keys up */
+window.addEventListener('message', e => {
+  const d = e.data || {};
+  if(d.type === 'shellkey' && booted && !bookOpen){
+    if(d.key === 'space') flip(cur + 1);
+    else if(d.key === 'g') openBook();
+  }
+});
+
+/* ch 01 boots like a console the first time it's tuned each power-on
+   (in-memory flag: a page refresh is the only way to see it again) */
+const ch01mod = iframeChannel('#ch01frame');
+let bootPlayed = false;
+function dropBootOverlay(){
+  const bf = $('#bootframe');
+  if(!bf.classList.contains('on')) return false;
+  bf.classList.remove('on');
+  bf.src = 'about:blank';
+  return true;
+}
+mods['01'] = {
+  start(){
+    if(museumMode && !bootPlayed){
+      bootPlayed = true;
+      const bf = $('#bootframe');
+      bf.src = 'channels/boot.html';
+      bf.classList.add('on');         // museum stays paused underneath
+    } else {
+      ch01mod.start();
+    }
+  },
+  stop(){
+    dropBootOverlay();                // surfing away mid-boot ejects the disc
+    ch01mod.stop();
+  },
+  send: ch01mod.send
+};
+window.addEventListener('message', e => {
+  const d = e.data || {};
+  if(d.type === 'boot' && d.action === 'done'){
+    if(dropBootOverlay() && activeCh === '01') ch01mod.start();
+  }
+});
+
+mods['02'] = iframeChannel('#ch02frame');
+mods['03'] = iframeChannel('#ch03frame');
+
+/* ch 10, the arcade. a ~77MB Godot build, so the iframe stays empty until first tuned */
+mods['10'] = (function(){
+  const fr = $('#ch10frame');
+  const im = iframeChannel('#ch10frame');
+  let loaded = false;
+  return {
+    start(){
+      // trailing slash: serve 301-redirects /index.html to a slash-less url, which
+      // breaks the build's relative js/wasm/pck paths
+      if(!loaded){ loaded = true; fr.src = 'channels/pacman/'; }
+      im.start();
+    },
+    stop(){ im.stop(); },
+    send: im.send
+  };
+})();
+
+/* ch 11-13, the rest of the arcade. each is a standalone page that mounts its game
+   on first tune and surfs onward through the game's own exit */
+function lazyChannel(frameSel, src){
+  const fr = $(frameSel);
+  const im = iframeChannel(frameSel);
+  let loaded = false;
+  return {
+    start(){ if(!loaded){ loaded = true; fr.src = src; } im.start(); },
+    stop(){ im.stop(); },
+    send: im.send
+  };
+}
+mods['11'] = lazyChannel('#ch11frame', 'channels/11-snake.html');
+mods['12'] = lazyChannel('#ch12frame', 'channels/12-clicker.html');
+mods['13'] = lazyChannel('#ch13frame', 'channels/13-golf.html');
+
+/* ---------- keys ---------- */
+window.addEventListener('keydown', e => {
+  if(!booted) return;
+  if(e.key === 'ArrowUp'){ e.preventDefault(); changeVol(+1); return; }
+  if(e.key === 'ArrowDown'){ e.preventDefault(); changeVol(-1); return; }
+  if(e.key.toLowerCase() === 'm'){ e.preventDefault(); toggleMute(); return; }
+  if(bookOpen){
+    if(e.key === 'Escape' || e.key.toLowerCase() === 'g'){ closeBook(); }
+    else if(e.key === 'ArrowRight'){ flipPageNext(); }
+    else if(e.key === 'ArrowLeft'){ flipPagePrev(); }
+    else if(/^[0-9]$/.test(e.key)){
+      closeBook();
+      const d = e.key;
+      setTimeout(() => pressDigit(d), 400);
+    }
+    else if(e.code === 'Space'){ e.preventDefault(); closeBook(); }
+    return;
+  }
+  if(e.code === 'Space' || e.key === 'ArrowRight'){ e.preventDefault(); flip(cur + 1); }
+  else if(e.key === 'ArrowLeft'){ flip(cur - 1); }
+  else if(e.key.toLowerCase() === 'g'){ openBook(); }
+  else if(/^[0-9]$/.test(e.key)){
+    if(activeCh === '02'){ mods['02'].send({digit: e.key}); Sound.blip(); }
+    else pressDigit(e.key);
+  }
+  else if(e.key === 'Backspace' && activeCh === '02'){ e.preventDefault(); mods['02'].send({key: 'Backspace'}); }
+});
+
+/* ---------- NS: no signal ---------- */
+mods['NS'] = (function(){
+  const cv = $('#nscv');
+  const ctx = cv.getContext('2d');
+  let running = false, last = 0;
+  function resize(){
+    cv.width = 320;
+    cv.height = Math.max(120, Math.round(320 * innerHeight / innerWidth));
+  }
+  function loop(t){
+    if(!running) return;
+    if(t - last > 80){ fillNoise(ctx, cv.width, cv.height, true); last = t; }
+    requestAnimationFrame(loop);
+  }
+  window.addEventListener('resize', () => { if(running){ resize(); fillNoise(ctx, cv.width, cv.height, true); } });
+  return {
+    start(){
+      resize();
+      running = true;
+      fillNoise(ctx, cv.width, cv.height, true);
+      if(!eyes.still) requestAnimationFrame(loop);
+      Sound.nsHiss(true);
+    },
+    stop(){ running = false; Sound.nsHiss(false); }
+  };
+})();
+/* CH 42 test card: hold the exact 1 kHz test tone while tuned in */
+mods['42'] = { start(){ Sound.testTone(true); }, stop(){ Sound.testTone(false); } };
+
+/* ---------- boot sequence ---------- */
+const INPUT_GAG_CHANCE = 0.5; // odds the TV wakes on the wrong input first
+const boot = $('#boot'), bluescr = $('#bluescr'), inputmenu = $('#inputmenu');
+const imrows = document.querySelectorAll('.imrow');
+/* a shared link (?ch=NN [&page=NNN]) tunes straight in and skips the input gag */
+const DEEP = new URLSearchParams(location.search);
+const deepHasCh = DEEP.has('ch');
+const deepCh = deepTarget(DEEP.get('ch'));
+const deepPage = (deepCh === '02' && /^\d{3}$/.test(DEEP.get('page') || '')) ? DEEP.get('page') : null;
+function selectInput(idx){
+  imrows.forEach((r, k) => r.classList.toggle('sel', k === idx));
+}
+function endBoot(target){
+  staticBurst(() => {
+    boot.style.display = 'none';
+    bluescr.style.display = 'none';
+    const ch = (target && (ORDER.indexOf(target) >= 0 || target === '42')) ? target : '01';
+    const i = ORDER.indexOf(ch);
+    if(i >= 0) cur = i;
+    activate(ch);
+    if(mods[ch] && mods[ch].start) mods[ch].start();
+    activeCh = ch;
+    booted = true;
+    showOsd(ch);
+    syncUrl(ch);
+    if(deepPage && ch === '02'){               // hand teletext its start page once it's listening
+      const fr = $('#ch02frame');
+      const fire = () => mods['02'].send({ page: deepPage });
+      fire();
+      fr.addEventListener('load', fire, { once: true });
+    }
+    if(Sound.vol === 0){
+      muteicon.classList.add('hint');
+      setTimeout(() => muteicon.classList.remove('hint'), 6000);
+    }
+  }, 500);
+}
+window.addEventListener('resize', sizeStatic);
+function startBoot(){
+  setTimeout(() => {
+    if(deepHasCh){
+      endBoot(deepCh || '01');               // arrived via a link, skip the gag
+    } else if(Math.random() < INPUT_GAG_CHANCE){
+      boot.style.display = 'none';
+      bluescr.style.display = 'block';
+      let idx = 1 + ((Math.random() * 4) | 0);
+      setTimeout(() => {
+        inputmenu.style.display = 'block';
+        selectInput(idx);
+        setTimeout(() => {
+          const cyc = setInterval(() => {
+            idx = (idx + 1) % 5;
+            selectInput(idx);
+            if(idx === 0){
+              clearInterval(cyc);
+              setTimeout(() => {
+                inputmenu.style.display = 'none';
+                endBoot();
+              }, 650);
+            }
+          }, 380);
+        }, 700);
+      }, 1200);
+    } else {
+      endBoot();
+    }
+  }, 1900);
+}
+/* a background tab throttles nested timers to ~1/min, which froze the boot mid-gag.
+   wait until the tab is visible so the turn-on actually plays */
+if(document.hidden){
+  const onVis = () => {
+    if(!document.hidden){
+      document.removeEventListener('visibilitychange', onVis);
+      startBoot();
+    }
+  };
+  document.addEventListener('visibilitychange', onVis);
+} else {
+  startBoot();
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YSR.TV · Channel 03: TeleHire Network</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --blue-hi:  #2a64ec;
+    --blue-mid: #143fc4;
+    --blue-lo:  #0a1f6b;
+    --ink:      #05123f;
+    --yellow:   #ffd400;
+    --yellow-d: #f0a800;
+    --red:      #e3122b;
+    --red-d:    #a40b1d;
+    --green:    #1fc25a;
+    --white:    #ffffff;
+    --stageW: 1920px;
+    --stageH: 1080px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: 'Oswald', 'Arial Narrow', Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- viewport scaler ---------- */
+  #viewport {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(ellipse at center, #0b1024 0%, #000 75%);
+    overflow: hidden;
+  }
+  #stage {
+    width: var(--stageW);
+    height: var(--stageH);
+    position: absolute;
+    left: 50%; top: 50%;
+    transform-origin: center center;
+    overflow: hidden;
+    background: var(--blue-lo);
+  }
+
+  /* ====================================================== SET / BACKDROP */
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(120% 95% at 50% 38%, var(--blue-hi) 0%, var(--blue-mid) 42%, var(--blue-lo) 78%, var(--ink) 100%);
+    overflow: hidden;
+  }
+  /* rotating sunburst rays */
+  .sunburst {
+    position: absolute;
+    width: 2600px; height: 2600px;
+    left: 50%; top: 36%;
+    transform: translate(-50%,-50%);
+    background: repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      rgba(255,255,255,0.085) 0deg 3.6deg,
+      rgba(255,255,255,0) 3.6deg 7.2deg
+    );
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 8%, rgba(0,0,0,0.35) 40%, transparent 66%);
+    mask-image: radial-gradient(circle at 50% 50%, #000 8%, rgba(0,0,0,0.35) 40%, transparent 66%);
+    animation: spin 90s linear infinite;
+    will-change: transform;
+  }
+  @keyframes spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
+
+  /* floor glow / set sheen */
+  .floor-glow {
+    position: absolute;
+    left: 50%; bottom: -260px;
+    width: 1700px; height: 700px;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse at center, rgba(120,170,255,0.35), transparent 70%);
+    filter: blur(20px);
+  }
+  .vignette {
+    position: absolute; inset: 0;
+    background: radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(2,8,32,0.55) 100%);
+    pointer-events: none;
+  }
+  /* CRT scanline + curvature glass */
+  .crt {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 60;
+    background:
+      repeating-linear-gradient(to bottom, rgba(0,0,0,0.10) 0px, rgba(0,0,0,0.10) 1px, transparent 2px, transparent 3px);
+    mix-blend-mode: multiply;
+    opacity: 0.45;
+  }
+  .crt::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(120% 120% at 50% 50%, transparent 78%, rgba(0,0,0,0.45) 100%);
+  }
+
+  /* ====================================================== TOP RIBBON */
+  .topribbon {
+    position: absolute; top: 0; left: 0; right: 0; height: 76px;
+    background: repeating-linear-gradient(45deg, var(--red) 0 26px, var(--red-d) 26px 52px);
+    display: flex; align-items: center; justify-content: center; gap: 26px;
+    border-bottom: 4px solid var(--yellow);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.4);
+    z-index: 30;
+    overflow: hidden;
+  }
+  .topribbon .crawl-strip {
+    display: inline-flex; align-items: center; gap: 26px;
+    white-space: nowrap;
+    font-family: 'Archivo Black', sans-serif;
+    color: var(--yellow);
+    font-size: 26px;
+    letter-spacing: 0.06em;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.45);
+    animation: ribbonScroll 26s linear infinite;
+  }
+  .topribbon .crawl-strip span { color: #fff; }
+  @keyframes ribbonScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* ====================================================== MAIN GRID */
+  .main {
+    position: absolute;
+    top: 76px; left: 0; right: 0; bottom: 196px;
+    display: grid;
+    grid-template-columns: 760px 1fr;
+    gap: 8px;
+    padding: 22px 46px 8px;
+    z-index: 20;
+  }
+
+  /* ---------------- LEFT: product ---------------- */
+  .product-col { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+  .product-halo {
+    position: absolute; width: 660px; height: 660px; top: 46%; left: 50%;
+    transform: translate(-50%,-50%);
+    background: radial-gradient(circle at 50% 45%, rgba(255,255,255,0.55), rgba(120,180,255,0.18) 38%, transparent 64%);
+    filter: blur(6px);
+  }
+  .tv-frame {
+    position: relative;
+    width: 452px; height: 622px;
+    border-radius: 18px;
+    padding: 14px;
+    background:
+      linear-gradient(145deg, #ffe98a, var(--yellow) 28%, var(--yellow-d) 72%, #b87900);
+    box-shadow:
+      0 0 0 6px #fff,
+      0 0 0 10px var(--red),
+      0 26px 60px rgba(0,0,0,0.55),
+      0 0 70px rgba(255,212,0,0.55);
+    z-index: 2;
+  }
+  .tv-frame::after {
+    content: "";
+    position: absolute; inset: 14px;
+    border-radius: 8px;
+    box-shadow: inset 0 0 60px rgba(0,0,0,0.55);
+    pointer-events: none;
+    z-index: 3;
+  }
+  .tv-frame img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: 50% 22%;
+    border-radius: 8px;
+    display: block;
+    filter: saturate(1.08) contrast(1.05);
+  }
+  .nameplate {
+    position: absolute; left: 50%; bottom: -26px; transform: translateX(-50%);
+    background: var(--ink);
+    border: 3px solid var(--yellow);
+    color: #fff;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 22px; letter-spacing: 0.04em;
+    padding: 9px 26px;
+    border-radius: 6px;
+    white-space: nowrap;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+    z-index: 5;
+    text-align: center;
+  }
+  .nameplate small { display: block; font-family: 'Oswald'; font-weight: 600; color: var(--yellow); font-size: 13px; letter-spacing: 0.22em; }
+
+  /* stickers / seals on product */
+  .seal {
+    position: absolute;
+    display: grid; place-items: center; text-align: center;
+    color: #fff;
+    font-family: 'Archivo Black', sans-serif;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.35);
+    line-height: 0.95;
+    z-index: 6;
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.4));
+  }
+  .seal-red { background: radial-gradient(circle at 38% 32%, #ff3a50, var(--red) 55%, var(--red-d)); }
+  .seal-yellow { background: radial-gradient(circle at 38% 32%, #fff0a8, var(--yellow) 52%, var(--yellow-d)); color: var(--ink); text-shadow: none; }
+  .seal-green { background: radial-gradient(circle at 38% 32%, #5ff39a, var(--green) 55%, #0f8c3f); }
+
+  .brandnew {
+    width: 168px; height: 168px;
+    top: -34px; left: -56px;
+    font-size: 27px;
+    transform: rotate(-17deg);
+    animation: pulseSeal 1.1s ease-in-out infinite;
+  }
+  .brandnew b { font-size: 34px; display:block; }
+  .instock {
+    width: 150px; height: 150px;
+    bottom: 36px; right: -54px;
+    font-size: 17px;
+    transform: rotate(13deg);
+  }
+  .instock b { font-size: 40px; display:block; color: var(--red); }
+  @keyframes pulseSeal {
+    0%,100% { transform: rotate(-17deg) scale(1); }
+    50%     { transform: rotate(-17deg) scale(1.08); }
+  }
+
+  /* ---------------- RIGHT: pitch ---------------- */
+  .pitch-col { position: relative; display: flex; flex-direction: column; padding-top: 4px; }
+  .pitch-main { width: 752px; display: flex; flex-direction: column; }
+
+  .eyebrow {
+    font-family: 'Archivo Black', sans-serif;
+    color: var(--yellow);
+    font-size: 23px; letter-spacing: 0.12em;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.4);
+    margin-bottom: 2px;
+  }
+  .headline {
+    font-family: 'Anton', sans-serif;
+    font-weight: 400;
+    line-height: 0.86;
+    text-transform: uppercase;
+    letter-spacing: 0.005em;
+  }
+  .headline .l1 {
+    display: block; font-size: 116px; color: #fff;
+    text-shadow:
+      4px 4px 0 var(--ink), 5px 5px 0 var(--ink),
+      0 0 30px rgba(0,0,0,0.35);
+  }
+  .headline .l1 .tm { font-size: 38px; vertical-align: super; color: var(--yellow); }
+  .headline .l2-wrap {
+    display: block;
+    margin-top: 13px;
+    transform: rotate(-1.4deg);
+    transform-origin: left center;
+  }
+  .headline .l2 {
+    display: inline;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    font-size: 42px; color: var(--ink);
+    background: var(--yellow);
+    padding: 7px 20px 3px;
+    box-shadow: 0 8px 0 var(--yellow-d), 0 14px 22px rgba(0,0,0,0.4);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .features {
+    list-style: none;
+    margin-top: 22px;
+    display: flex; flex-direction: column; gap: 15px;
+  }
+  .features li {
+    display: flex; align-items: flex-start; gap: 14px;
+    font-family: 'Oswald', sans-serif; font-weight: 600;
+    color: #fff; font-size: 28px; line-height: 1.08;
+    text-shadow: 1px 2px 3px rgba(0,0,0,0.4);
+  }
+  .features li .chk {
+    flex: none;
+    width: 38px; height: 38px; margin-top: 1px;
+    background: radial-gradient(circle at 38% 32%, #5ff39a, var(--green) 60%, #0f8c3f);
+    border: 3px solid #fff;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    color: #fff; font-size: 24px; font-weight: 900;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.35);
+  }
+  .features li b { color: var(--yellow); }
+  .features li .ast { color: var(--yellow); font-size: 0.7em; vertical-align: super; }
+  .features li { transition: transform .28s ease; }
+  .features li.lit { transform: translateX(10px); }
+  .features li.lit .chk {
+    background: radial-gradient(circle at 38% 32%, #fff6b0, var(--yellow) 58%, var(--yellow-d));
+    color: var(--ink);
+    box-shadow: 0 0 0 4px rgba(255,212,0,0.45), 0 4px 10px rgba(0,0,0,0.4);
+  }
+
+  .butwait {
+    margin-top: 22px;
+    font-family: 'Archivo Black', sans-serif;
+    color: #fff; font-size: 34px;
+    letter-spacing: 0.02em;
+    text-shadow: 3px 3px 0 var(--red);
+    animation: wobble 1.6s ease-in-out infinite;
+    transform-origin: left center;
+    align-self: flex-start;
+  }
+  .butwait em { color: var(--yellow); font-style: normal; }
+  @keyframes wobble {
+    0%,100% { transform: rotate(-1.5deg) scale(1); }
+    50%     { transform: rotate(1.5deg) scale(1.03); }
+  }
+
+  /* BONUS burst (floats in right gutter, top) */
+  .bonus-burst {
+    position: absolute;
+    top: 14px; right: 40px;
+    width: 250px; height: 250px;
+    display: grid; place-items: center; text-align: center;
+    color: var(--ink);
+    font-family: 'Archivo Black', sans-serif;
+    line-height: 1.04;
+    transform: rotate(8deg);
+    animation: bonusPulse 1.3s ease-in-out infinite;
+    z-index: 26;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,0.45));
+  }
+  .bonus-burst .inner { padding: 0 44px; }
+  .bonus-burst .free { display:block; font-size: 24px; color: var(--red); letter-spacing: 0.02em; }
+  .bonus-burst .big  { display:block; font-size: 33px; color: var(--ink); margin: 1px 0 2px; line-height: 0.9; }
+  .bonus-burst .sub  { display:block; font-size: 13px; font-family: 'Oswald'; font-weight: 700; line-height: 1.12; }
+  @keyframes bonusPulse { 0%,100%{ transform: rotate(8deg) scale(1);} 50%{ transform: rotate(8deg) scale(1.05);} }
+
+  /* PRICE seal — floats in right gutter, bottom */
+  .price-burst {
+    position: absolute;
+    right: 22px; bottom: 24px;
+    width: 332px; height: 332px;
+    display: grid; place-items: center; text-align: center;
+    color: #fff;
+    font-family: 'Archivo Black', sans-serif;
+    line-height: 1.0;
+    transform: rotate(-7deg);
+    z-index: 25;
+    animation: priceThrob 0.9s ease-in-out infinite;
+    filter: drop-shadow(0 14px 26px rgba(0,0,0,0.5));
+  }
+  .price-burst .inner { padding: 0 52px; }
+  .price-burst .was { display:block; white-space:nowrap; font-family:'Oswald'; font-weight:700; font-size: 15px; color: #ffd9dd; letter-spacing: 0.01em; }
+  .price-burst .was s { opacity: 0.95; }
+  .price-burst .now { display:block; white-space:nowrap; font-family:'Oswald'; font-weight:700; font-size: 13px; letter-spacing: 0.06em; color: var(--yellow); margin-top: 3px; }
+  .price-burst .big { display:block; font-size: 84px; color: var(--yellow); margin: 2px 0 -4px; text-shadow: 2px 2px 0 var(--red-d); line-height: 0.86; }
+  .price-burst .down { display:block; font-size: 31px; color: var(--yellow); line-height: 0.9; text-shadow: 2px 2px 0 var(--red-d); letter-spacing: 0.02em; }
+  .price-burst .tag { display:block; font-size: 14px; margin-top: 5px; }
+  @keyframes priceThrob { 0%,100%{ transform: rotate(-7deg) scale(1);} 50%{ transform: rotate(-7deg) scale(1.05);} }
+
+  /* ====================================================== CALL BAND */
+  .callband {
+    position: absolute;
+    left: 0; right: 0; bottom: 56px; height: 140px;
+    background: linear-gradient(180deg, var(--yellow) 0%, var(--yellow-d) 100%);
+    border-top: 5px solid #fff;
+    border-bottom: 5px solid var(--ink);
+    display: grid;
+    grid-template-columns: 300px 1fr 360px;
+    align-items: center;
+    gap: 18px;
+    padding: 0 40px;
+    z-index: 40;
+    box-shadow: 0 -8px 26px rgba(0,0,0,0.4);
+  }
+  .callnow {
+    font-family: 'Anton', sans-serif;
+    font-size: 62px; color: var(--red);
+    text-transform: uppercase; line-height: 0.9; text-align: center;
+    text-shadow: 2px 2px 0 #fff;
+    animation: blink 0.7s steps(1) infinite;
+  }
+  @keyframes blink { 0%,49%{ opacity: 1; } 50%,100%{ opacity: 0.18; } }
+
+  .phone-wrap { text-align: center; color: var(--ink); text-decoration: none; display: block; }
+  .phone-wrap .pre { font-family:'Archivo Black'; font-size: 20px; letter-spacing: 0.18em; }
+  .phone {
+    font-family: 'Anton', sans-serif;
+    font-size: 86px; line-height: 0.82; color: var(--ink);
+    letter-spacing: 0.01em;
+    text-shadow: 3px 3px 0 #fff, 5px 5px 0 rgba(0,0,0,0.18);
+  }
+  .phone-wrap .sub { font-family:'Oswald'; font-weight: 700; font-size: 17px; letter-spacing: 0.04em; margin-top: 2px; }
+  .phone-wrap:hover .phone { color: var(--red); }
+
+  .urgency { text-align: center; color: var(--ink); font-family: 'Oswald'; font-weight: 700; }
+  .urgency .lab { font-family:'Archivo Black'; font-size: 15px; letter-spacing: 0.12em; }
+  .clock {
+    display: inline-block; margin-top: 4px;
+    background: var(--ink); color: var(--yellow);
+    font-family: 'Anton', sans-serif; font-size: 46px;
+    padding: 2px 16px 0; border-radius: 6px;
+    letter-spacing: 0.06em;
+    border: 2px solid #fff;
+  }
+  .callers { font-size: 16px; margin-top: 5px; color: var(--red-d); }
+  .callers b { font-family:'Archivo Black'; color: var(--red); }
+
+  /* ====================================================== LEGAL CRAWL */
+  .legalbar {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 56px;
+    background: var(--ink);
+    border-top: 3px solid var(--blue-hi);
+    display: flex; align-items: center;
+    overflow: hidden;
+    z-index: 45;
+  }
+  .legalbar .tag {
+    flex: none;
+    align-self: stretch; display: flex; align-items: center;
+    background: var(--red);
+    color: #fff; font-family:'Archivo Black'; font-size: 15px; letter-spacing: 0.1em;
+    padding: 0 18px;
+    z-index: 2;
+  }
+  .legal-track {
+    white-space: nowrap;
+    font-family: 'Oswald', sans-serif; font-weight: 500;
+    color: #bcd0ff; font-size: 19px; letter-spacing: 0.01em;
+    animation: crawl 70s linear infinite;
+    padding-left: 100%;
+  }
+  .legal-track b { color: var(--yellow); }
+  @keyframes crawl { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+
+  /* ====================================================== PAUSE / reduced motion */
+  #stage.paused .sunburst,
+  #stage.paused .topribbon .crawl-strip,
+  #stage.paused .legal-track,
+  #stage.paused .callnow,
+  #stage.paused .brandnew,
+  #stage.paused .bonus-burst,
+  #stage.paused .price-burst,
+  #stage.paused .butwait { animation-play-state: paused; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sunburst, .topribbon .crawl-strip, .legal-track, .callnow,
+    .brandnew, .bonus-burst, .price-burst, .butwait, .features li { animation: none !important; }
+    .features li { opacity: 1; transform: none; }
+    .callnow { opacity: 1; }
+  }
+
+  /* channel-flip mount hint badge (dev only, hidden) */
+  .chyron-hint { display: none; }
+
+  /* embedded in the YSR·TV shell: the shell's glass provides scanlines + vignette,
+     and the eye-doctor settings control them — so the internal CRT layer stays off */
+  .crt { display: none; }
+</style>
+</head>
+<body>
+  <div id="viewport">
+    <div id="stage" role="img" aria-label="TeleHire Network infomercial selling Yaser Allahim, all-in-one developer and designer.">
+
+      <!-- SET -->
+      <div class="backdrop">
+        <div class="sunburst"></div>
+        <div class="floor-glow"></div>
+      </div>
+      <div class="vignette"></div>
+
+      <!-- TOP RIBBON -->
+      <div class="topribbon">
+        <div class="crawl-strip" id="ribbon"></div>
+      </div>
+
+      <!-- MAIN -->
+      <div class="main">
+
+        <!-- LEFT: PRODUCT -->
+        <div class="product-col">
+          <div class="product-halo"></div>
+          <div class="tv-frame">
+            <img src="../assets/yaser.jpg" alt="Yaser Allahim" />
+            <div class="seal seal-red brandnew burst" data-points="22">
+              <div><span>100%</span><b>BRAND</b>NEW!</div>
+            </div>
+            <div class="seal seal-yellow instock burst" data-points="20">
+              <div>ONLY<b>1</b>IN STOCK</div>
+            </div>
+            <div class="nameplate">
+              THE&nbsp;YASER™ &nbsp;·&nbsp; 2027 MODEL
+              <small>MODEL № YSR-CS-2027</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: PITCH -->
+        <div class="pitch-col">
+         <div class="pitch-main">
+          <div class="eyebrow">★ THE ALL-NEW, ALL-IN-ONE, FACTORY-FRESH ★</div>
+          <h1 class="headline">
+            <span class="l1">THE YASER<span class="tm">™</span></span>
+            <span class="l2-wrap"><span class="l2">DEVELOPER + UI/UX DESIGNER</span></span>
+          </h1>
+
+          <ul class="features" id="features">
+            <li><span class="chk">✓</span><span>Speaks <b>12+ PROGRAMMING LANGUAGES</b>: Java, C++, Python, Rust<span class="ast">*</span> &amp; MORE, all INCLUDED!</span></li>
+            <li><span class="chk">✓</span><span><b>TWO PROS IN ONE:</b> a real UI/UX designer <i>and</i> a full-blown programmer. No assembly required!</span></li>
+            <li><span class="chk">✓</span><span>Builds <b>GAMES SO POLISHED</b> his Pac-Man fan game gets mistaken for the OFFICIAL one!</span></li>
+            <li><span class="chk">✓</span><span>Hides <b>FREE SECRET MINI-GAMES</b> in your site: Snake &amp; Cube Clicker INCLUDED!</span></li>
+            <li><span class="chk">✓</span><span><b>OBSESSIVELY PIXEL-PERFECT</b>: polishes every detail until it's flawless (or until burnout)!</span></li>
+          </ul>
+
+          <div class="butwait">BUT WAIT... <em>THERE'S MORE!</em></div>
+         </div>
+        </div>
+
+        <!-- BONUS BURST (right gutter, top) -->
+        <div class="seal-yellow bonus-burst burst" data-points="24">
+          <div class="inner">
+            <span class="free">FREE BONUS!</span>
+            <span class="big">4 MONTHS</span>
+            <span class="sub">of REAL retail experience, a $0 value, FREE!</span>
+          </div>
+        </div>
+
+        <!-- PRICE BURST (right gutter, bottom) -->
+        <div class="seal-red price-burst burst" data-points="24">
+          <div class="inner">
+            <span class="was"><s>WAS: SENIOR-DEV PAY</s></span>
+            <span class="now">NEW-GRAD CLEARANCE</span>
+            <span class="big">$0</span>
+            <span class="down">DOWN!</span>
+            <span class="tag">just make an offer!*</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CALL BAND -->
+      <div class="callband">
+        <div class="callnow">CALL<br>NOW!</div>
+        <a class="phone-wrap" href="https://www.linkedin.com/in/%D9%8A%D8%A7%D8%B3%D8%B1-%D8%A7%D9%84%D9%84%D8%A7%D8%AD%D9%85-267496318/" target="_blank" rel="noopener">
+          <div class="pre">DIAL TOLL-FREE</div>
+          <div class="phone">1-800-HIRE-YSR</div>
+          <div class="sub">OPERATORS (it's just him) STANDING BY 24/7!</div>
+        </a>
+        <div class="urgency">
+          <div class="lab">THIS OFFER EXPIRES IN</div>
+          <div class="clock" id="clock">04:59</div>
+          <div class="callers">CALLERS WAITING: <b id="callers">1,204</b></div>
+        </div>
+      </div>
+
+      <!-- LEGAL CRAWL -->
+      <div class="legalbar">
+        <div class="tag">PLEASE READ</div>
+        <div class="legal-track" id="legal"></div>
+      </div>
+
+      <!-- CRT GLASS -->
+      <div class="crt"></div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------------- starburst seal generator ---------------- */
+  function starburst(points, inner, outer) {
+    const step = Math.PI / points;
+    const pts = [];
+    for (let i = 0; i < points * 2; i++) {
+      const r = (i % 2 === 0) ? outer : inner;
+      const a = i * step - Math.PI / 2;
+      const x = 50 + Math.cos(a) * r;
+      const y = 50 + Math.sin(a) * r;
+      pts.push(x.toFixed(2) + "% " + y.toFixed(2) + "%");
+    }
+    return "polygon(" + pts.join(",") + ")";
+  }
+  document.querySelectorAll(".burst").forEach(function (el) {
+    const n = parseInt(el.dataset.points || "20", 10);
+    el.style.clipPath = starburst(n, 38, 50);
+    el.style.webkitClipPath = starburst(n, 38, 50);
+  });
+
+  /* ---------------- viewport scaling ---------------- */
+  const stage = document.getElementById("stage");
+  function fit() {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const s = Math.min(vw / 1920, vh / 1080);
+    stage.style.transform = "translate(-50%,-50%) scale(" + s + ")";
+  }
+  window.addEventListener("resize", fit);
+  fit();
+  /* the shell loads this document while the channel is hidden, so the first fit()
+     measures a bogus viewport — refit whenever our real size changes */
+  if (window.ResizeObserver) {
+    new ResizeObserver(fit).observe(document.documentElement);
+  }
+
+  /* ---------------- top ribbon content (doubled for seamless loop) ---------------- */
+  const ribbonItems = [
+    "NEW-GRAD CLEARANCE EVENT", "EVERYTHING MUST GO (TO WORK)",
+    "ONE-OF-A-KIND ITEM", "WHILE SUPPLIES LAST", "SUPPLIES = ONE (1) YASER",
+    "AS SEEN IN THE CS DEPARTMENT", "100% HUMAN GUARANTEE"
+  ];
+  const ribEl = document.getElementById("ribbon");
+  function buildRibbon() {
+    const chunk = ribbonItems.map(t => "★ <span>" + t + "</span>").join(" &nbsp; ");
+    ribEl.innerHTML = chunk + " &nbsp; " + chunk + " &nbsp; ";
+  }
+  buildRibbon();
+
+  /* ---------------- feature highlight sweep (a lit chase across the bullets — never hides them) ---------------- */
+  const featLis = document.querySelectorAll("#features li");
+  let litIdx = 0, litTimer = null;
+  function sweep() {
+    featLis.forEach(function (li, i) { li.classList.toggle("lit", i === litIdx); });
+    litIdx = (litIdx + 1) % featLis.length;
+  }
+
+  /* ---------------- legal crawl ---------------- */
+  const legal =
+    "<b>FINE PRINT:</b> Yaser is a real human being and not an actual household appliance. " +
+    "Graduation projected late 2027; product not available for full-time deployment until then; internships, freelance &amp; general admiration accepted IMMEDIATELY. " +
+    "&quot;12+ languages&quot; includes Java, JavaScript, Python, C, C++, Rust*, Lua, GDScript &amp; others; asterisk (*) denotes &quot;will absolutely figure it out given coffee and a little time.&quot; " +
+    "4 months of phone-shop retail experience legally qualifies as &quot;industry-tested.&quot; " +
+    "Pac-Man fan game is NOT affiliated with, endorsed by, or in any way official; please do not sue. " +
+    "Uncanny cat golf game is uncanny <b>on purpose</b>. " +
+    "Secret mini-games (Snake, Cube Clicker) included at no additional charge and may appear when you least expect them. " +
+    "Side effects of hiring may include: suspiciously clean UI, obsessive attention to spacing, unsolicited design feedback, and the occasional 3 A.M. commit. " +
+    "Perfectionism may cause extended polish cycles; results worth it. " +
+    "&quot;$0 DOWN&quot; reflects genuinely, alarmingly low new-grad salary expectations; please advise a fair number, he truly has no idea. " +
+    "Operators are not standing by; the operator is Yaser; Yaser is sometimes asleep. " +
+    "Offer valid while supplies last. Supplies = one (1) Yaser. &nbsp;★&nbsp; ";
+  const legalEl = document.getElementById("legal");
+  legalEl.innerHTML = legal + legal;
+
+  /* ---------------- countdown clock ---------------- */
+  let secs = 5 * 60 - 1;
+  const clockEl = document.getElementById("clock");
+  let clockTimer = null;
+  function tickClock() {
+    if (secs <= 0) secs = 5 * 60 - 1;
+    const m = Math.floor(secs / 60), s = secs % 60;
+    clockEl.textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+    secs--;
+  }
+  tickClock();
+
+  /* ---------------- callers-waiting counter (jitters up) ---------------- */
+  const callersEl = document.getElementById("callers");
+  let callers = 1204;
+  let callersTimer = null;
+  function tickCallers() {
+    callers += Math.floor(Math.random() * 7) - 2; // mostly up, sometimes down
+    if (callers < 1180) callers = 1180;
+    if (callers > 1399) callers = 1399;
+    callersEl.textContent = callers.toLocaleString();
+  }
+
+  /* ---------------- channel play / pause API (for the channel-flipper shell) ---------------- */
+  const Channel = {
+    isPlaying: false,
+    play() {
+      fit();
+      if (this.isPlaying) return;
+      this.isPlaying = true;
+      stage.classList.remove("paused");
+      clockTimer = setInterval(tickClock, 1000);
+      callersTimer = setInterval(tickCallers, 1400);
+      litTimer = setInterval(sweep, 1150); sweep();
+    },
+    pause() {
+      this.isPlaying = false;
+      stage.classList.add("paused");
+      clearInterval(clockTimer); clockTimer = null;
+      clearInterval(callersTimer); callersTimer = null;
+      clearInterval(litTimer); litTimer = null;
+    },
+    toggle() { this.isPlaying ? this.pause() : this.play(); }
+  };
+  window.YSRChannel = Channel;
+
+  // auto-pause when the tab/channel isn't visible
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) Channel.pause(); else Channel.play();
+  });
+
+  // let a parent channel-flipper shell drive playback
+  window.addEventListener("message", function (e) {
+    const d = e.data || {};
+    if (d.type !== "channel" && d.channel == null) return;
+    const action = d.action || d.channel;
+    if (action === "play" || action === "show" || action === "enter") Channel.play();
+    else if (action === "pause" || action === "hide" || action === "leave") Channel.pause();
+  });
+
+  // honor ?paused=1 for static embeds
+  const params = new URLSearchParams(location.search);
+  if (params.get("paused") === "1" || params.get("static") === "1") {
+    Channel.pause();
+  } else {
+    Channel.play();
+  }
+})();
+</script>
+</body>
+</html>

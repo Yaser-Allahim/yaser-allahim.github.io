@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CH 11 — Snake</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#0e052e;}</style>
+</head>
+<body>
+<!-- Yaser's leaderboard Snake, mounted as a channel. The game builds its own
+     full-screen canvas; arrows steer, ESC exits. -->
+<script src="../games/snake.js"></script>
+<script>
+(function () {
+  var started = false;
+  /* the game's own exit (ESC / game-over key) surfs the TV to the next channel;
+     resetting `started` means re-tuning later starts a fresh game */
+  function exit() {
+    started = false;
+    try { parent.postMessage({ type: 'shellkey', key: 'space' }, '*'); } catch (e) {}
+  }
+  function start() {
+    if (started || !window.TuwaiqSnake) return;
+    started = true;
+    window.TuwaiqSnake.init(exit);
+  }
+  /* the game owns every key except [g] (open the channel guide) */
+  window.addEventListener('keydown', function (e) {
+    if (e.key && e.key.toLowerCase() === 'g') {
+      e.preventDefault(); e.stopImmediatePropagation();
+      try { parent.postMessage({ type: 'shellkey', key: 'g' }, '*'); } catch (x) {}
+    }
+  }, true);
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.type === 'channel' && d.action === 'play') start();
+    /* no audio; a hidden iframe freezes rAF, so pause needs nothing */
+  });
+  window.YSRChannel = { play: start, pause: function () {} };
+  /* lazy-mounted: the doc only loads when first tuned, so begin now too */
+  if (document.readyState === 'complete') start();
+  else window.addEventListener('load', start);
+})();
+</script>
+</body>
+</html>

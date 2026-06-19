@@ -1,0 +1,42 @@
+[
+  {
+    "id": "1",
+    "handle": "@Tuwaiq_KSU",
+    "displayName": "Tuwaiq Club",
+    "text": "🚀 Our new frontpage is live! After weeks of building, we're proud to launch the Tuwaiq Club website. Check it out and let us know what you think. More features coming soon — events, graduates, blog & more. #TuwaiqClub #KSU #BuildInPublic",
+    "date": "2026-04-17T10:00:00Z",
+    "url": "https://x.com/Tuwaiq_KSU",
+    "likes": 48,
+    "retweets": 12
+  },
+  {
+    "id": "2",
+    "handle": "@Tuwaiq_KSU",
+    "displayName": "Tuwaiq Club",
+    "text": "📅 Hackathon 2026 is happening this June! 48 hours of building, learning, and competing with the best CS minds at KSU. Registration opens next week. Stay tuned for details. #Hackathon #KSU #CS",
+    "date": "2026-04-12T14:30:00Z",
+    "url": "https://x.com/Tuwaiq_KSU",
+    "likes": 73,
+    "retweets": 21
+  },
+  {
+    "id": "3",
+    "handle": "@Tuwaiq_KSU",
+    "displayName": "Tuwaiq Club",
+    "text": "💡 Did you know? Tuwaiq Club has helped 200+ students land internships and jobs in tech. Our workshops, mentorship programs, and project collaborations are open to all KSU students. Come join us — your next opportunity starts here.",
+    "date": "2026-04-08T09:00:00Z",
+    "url": "https://x.com/Tuwaiq_KSU",
+    "likes": 91,
+    "retweets": 34
+  },
+  {
+    "id": "4",
+    "handle": "@Tuwaiq_KSU",
+    "displayName": "Tuwaiq Club",
+    "text": "🤖 Our AI Symposium in September will feature expert talks on LLMs, computer vision, and autonomous systems. Live demos included. Free for all KSU students — no registration needed. Mark your calendars! #AI #MachineLearning",
+    "date": "2026-04-03T16:00:00Z",
+    "url": "https://x.com/Tuwaiq_KSU",
+    "likes": 56,
+    "retweets": 18
+  }
+]

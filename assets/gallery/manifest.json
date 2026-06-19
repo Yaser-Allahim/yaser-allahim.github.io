@@ -1,0 +1,95 @@
+{
+  "collections": [
+    {
+      "id": "kutwah",
+      "kicker": "collection i",
+      "name": "KUTWAH",
+      "meta": "program identity · social culture club · 2026",
+      "works": [
+        { "f": "kutwah/Katwah.png",        "t": "Kutwah — program logo",       "m": "identity · logomark" },
+        { "f": "kutwah/Kbanner (1).png",   "t": "Social banner",               "m": "social media · banner" },
+        { "f": "kutwah/Kutwa Sign Up.png", "t": "Sign-up post",                "m": "social media · shipped" },
+        { "f": "kutwah/temp 1.png",        "t": "Sign-up post — test variant", "m": "social media · unshipped. the one that didn't make it." }
+      ]
+    },
+    {
+      "id": "hashcode",
+      "kicker": "collection ii",
+      "name": "HASHCODE 2026",
+      "meta": "full event identity · may 16, 2026",
+      "works": [
+        { "f": "hashcode-2026/HashCode Stand.png",               "t": "Event stand",     "m": "large-format print" },
+        { "f": "hashcode-2026/Attendee.png",                     "t": "Attendee badge",  "m": "badge · print" },
+        { "f": "hashcode-2026/Orginizer.png",                    "t": "Organizer badge", "m": "badge · print" },
+        { "f": "hashcode-2026/Presenter.png",                    "t": "Presenter badge", "m": "badge · print" },
+        { "f": "hashcode-2026/Certificate.png",                  "t": "Certificate",     "m": "certificate · print" },
+        { "f": "hashcode-2026/HashCode Award Stickers V1.0.png", "t": "Award stickers",  "m": "sticker sheet" },
+        { "f": "hashcode-2026/Problem Sheet.png",                "t": "Problem sheet",   "m": "competition material" },
+        { "f": "hashcode-2026/Scratch Sheet.png",                "t": "Scratch sheet",   "m": "competition material" },
+        { "f": "hashcode-2026/QR CODE.png",                      "t": "QR poster",       "m": "print · wayfinding" }
+      ]
+    },
+    {
+      "id": "scc",
+      "kicker": "collection iii",
+      "name": "SCC AI BOOTCAMP",
+      "meta": "event materials · may 17–20, 2026",
+      "works": [
+        { "f": "scc-ai-bootcamp/SCC AI BOOTCAMP V2.1.png", "t": "Main visual — v2.1", "m": "key art · final" },
+        { "f": "scc-ai-bootcamp/SCC AI BOOTCAMP V2.png",   "t": "Main visual — v2",   "m": "key art · iteration" },
+        { "f": "scc-ai-bootcamp/SCC AI BOOTCAMP.png",      "t": "Main visual — v1",   "m": "key art · first pass" },
+        { "f": "scc-ai-bootcamp/Folder Cover.png",         "t": "Folder cover",       "m": "print collateral" },
+        { "f": "scc-ai-bootcamp/ATTENDEE.png",             "t": "Attendee badge",     "m": "badge · print" },
+        { "f": "scc-ai-bootcamp/PRESENTER.png",            "t": "Presenter badge",    "m": "badge · print" },
+        { "f": "scc-ai-bootcamp/STAFF.png",                "t": "Staff badge",        "m": "badge · print" },
+        { "f": "scc-ai-bootcamp/Certificate.png",          "t": "Certificate",        "m": "certificate · print" },
+        { "f": "scc-ai-bootcamp/Certificate+.png",         "t": "Certificate+",       "m": "certificate · variant" }
+      ]
+    },
+    {
+      "id": "cubix",
+      "kicker": "collection iv",
+      "name": "CUBIX STUDY GUIDE",
+      "meta": "study guide illustrations · CSC343 · jun 2–9, 2026",
+      "works": [
+        { "f": "studyguides/Cubix-CSC343/CubixFrontPage.png",   "t": "Front page cover illustration", "m": "main illustration · final" },
+        { "f": "studyguides/Cubix-CSC343/CubixCHP1.png",        "t": "Chapter 1 illustration",        "m": "chapter art" },
+        { "f": "studyguides/Cubix-CSC343/CubixCHP3.png",        "t": "Chapter 3 illustration",        "m": "chapter art" },
+        { "f": "studyguides/Cubix-CSC343/CubixPlaceholder.png", "t": "Cubix — placeholder",           "m": "in-guide asset" }
+      ]
+    },
+    {
+      "id": "tenny",
+      "kicker": "collection v",
+      "name": "TENNY STUDY GUIDE",
+      "meta": "study guide illustrations · PHYS103 · 2026",
+      "works": [
+        { "f": "studyguides/Tenny-PHYS103/TennyBoard.png",  "t": "Tenny at the board", "m": "illustration" },
+        { "f": "studyguides/Tenny-PHYS103/Tenny.png",       "t": "Tenny",              "m": "character design" },
+        { "f": "studyguides/Tenny-PHYS103/TennyThink.png",  "t": "Tenny, thinking",    "m": "illustration" },
+        { "f": "studyguides/Tenny-PHYS103/TennyBulb.png",   "t": "The idea",           "m": "illustration" },
+        { "f": "studyguides/Tenny-PHYS103/bulb.png",        "t": "The bulb",           "m": "in-guide asset" },
+        { "f": "studyguides/Tenny-PHYS103/TennyBounce.png", "t": "Bounce",             "m": "physics · motion" },
+        { "f": "studyguides/Tenny-PHYS103/TennyPush.png",   "t": "Push",               "m": "physics · motion" },
+        { "f": "studyguides/Tenny-PHYS103/TennySpin.png",   "t": "Spin",               "m": "physics · motion" },
+        { "f": "studyguides/Tenny-PHYS103/TennySwing.png",  "t": "Swing",              "m": "physics · motion" }
+      ]
+    },
+    {
+      "id": "tuwaiq",
+      "kicker": "collection vi",
+      "name": "TUWAIQ CLUB",
+      "meta": "club identity & website · KSU · 2026 →",
+      "live": true,
+      "works": [
+        { "live": true, "url": "../tuwaiq/soon/", "t": "Coming-soon page",     "m": "shipped · live at tuwaiqksu.com" },
+        { "live": true, "url": "../tuwaiq/soon/ar.html",    "t": "Coming-soon — Arabic", "m": "shipped · RTL build · bilingual" },
+        { "live": true, "url": "../tuwaiq/soon/", "t": "Coming-soon — mobile", "m": "shipped · responsive design", "device": "mobile" },
+        { "live": true, "url": "../tuwaiq/site/",           "t": "The club site — home", "m": "work in progress · astro + react", "wip": true },
+        { "live": true, "url": "../tuwaiq/site/events/",    "t": "Events page",          "m": "work in progress", "wip": true },
+        { "live": true, "url": "../tuwaiq/site/blog/",      "t": "Blog",                 "m": "work in progress", "wip": true },
+        { "live": true, "url": "../tuwaiq/site/",           "t": "The club site — mobile", "m": "work in progress · responsive", "device": "mobile", "wip": true }
+      ]
+    }
+  ]
+}

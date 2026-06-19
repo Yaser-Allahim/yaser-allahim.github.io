@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CH 12 — Cube Clicker</title>
+<style>html,body{margin:0;height:100%;overflow:hidden;background:#0e052e;}</style>
+</head>
+<body>
+<!-- Yaser's idle game, mounted as a channel. It builds its own UI, saves to
+     localStorage (+ cloud), and exits via its on-screen [×] button. -->
+<script src="../games/clicker.js"></script>
+<script>
+(function () {
+  var started = false;
+  /* the game's [×] button surfs the TV onward; reset so a later tune re-mounts */
+  function exit() {
+    started = false;
+    try { parent.postMessage({ type: 'shellkey', key: 'space' }, '*'); } catch (e) {}
+  }
+  function start() {
+    if (started || !window.TuwaiqClicker) return;
+    started = true;
+    window.TuwaiqClicker.init(exit);
+  }
+  /* forward [g] (open the channel guide); the game owns the rest */
+  window.addEventListener('keydown', function (e) {
+    if (e.key && e.key.toLowerCase() === 'g') {
+      e.preventDefault(); e.stopImmediatePropagation();
+      try { parent.postMessage({ type: 'shellkey', key: 'g' }, '*'); } catch (x) {}
+    }
+  }, true);
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.type === 'channel' && d.action === 'play') start();
+  });
+  window.YSRChannel = { play: start, pause: function () {} };
+  if (document.readyState === 'complete') start();
+  else window.addEventListener('load', start);
+})();
+</script>
+</body>
+</html>

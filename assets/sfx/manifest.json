@@ -1,0 +1,12 @@
+{
+  "surf": "channel-static.mp3",
+  "hiss": "no-signal-loop.mp3",
+  "ambient": "no-signal-loop.mp3",
+  "paper": "page-turn.mp3",
+  "click": ["button-1.mp3", "button-2.mp3", "button-3.mp3"],
+  "powerOn": "power-on.mp3",
+  "degauss": "power-on.mp3",
+  "scribble": "pencil.mp3",
+  "tuningSweep": "tuning-blip.mp3",
+  "errorBuzz": "error.mp3"
+}
