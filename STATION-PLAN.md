@@ -206,10 +206,10 @@
 
 ## D. SHIP — launch checklist
 
-- [~] git init + push (2026-06-19): pushed to **private** repo
-      `Yaser-Allahim/yaser-allahim.github.io` (branch `main`, gh CLI). Pages NOT live yet: a free
-      account only serves Pages from a public repo, so flip the repo to public (or upgrade to Pro)
-      when ready, then Pages auto-serves at https://yaser-allahim.github.io from main at the root.
+- [x] git init + push + **LIVE** (2026-06-20): `Yaser-Allahim/yaser-allahim.github.io` (branch `main`).
+      Repo flipped **public** and GitHub Pages enabled (source main / root, https enforced, custom 404
+      picked up). Verified live at **https://yaser-allahim.github.io/** (home/museum/pacman/og/manifest
+      all 200, bad URL -> 404 no-signal page). Two commits, clean history, no AI trailer.
 - [x] `404.html` = the no-signal channel (2026-06-19). Standalone page (no shared deps), animated
       static + "NO SIGNAL" + a link back to `/`; honors reduced-motion (still static).
 - [x] favicon + OG/social image + meta tags (2026-06-19). `favicon.svg` (a tiny test-card TV);

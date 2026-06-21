@@ -65,6 +65,23 @@
   #plaque .pe { margin-top: 10px; padding-top: 8px; border-top: 1px solid #d8d3c6; font-size: 10.5px; letter-spacing: 0.14em; color: #8a8578; }
   #plaque .pe b { font-weight: 700; background: var(--ink); color: var(--paper); padding: 0 6px; }
 
+  /* touch / short screens (landscape phones): shrink the overlays so they don't
+     swamp the short glass */
+  @media (pointer: coarse), (max-height: 460px) {
+    #hud { top: 12px; left: 14px; }
+    #hud .h1 { font-size: 15px; }
+    #hud .h2 { font-size: 8.5px; letter-spacing: 0.16em; margin-top: 2px; }
+    #plaque { right: 12px; bottom: 12px; width: 198px; padding: 11px 13px 9px; border-top-width: 2px; }
+    #plaque .pt { font-size: 15px; margin-bottom: 5px; }
+    #plaque .pm { font-size: 9.5px; line-height: 1.5; }
+    #plaque .pe { font-size: 8.5px; margin-top: 6px; padding-top: 5px; }
+    #enter .t { font-size: 26px; }
+    #enter .s { font-size: 10px; }
+    #enter .k { font-size: 10.5px; }
+    #inspect .ip .pt { font-size: 19px; }
+    #inspect .ip .pm { font-size: 10.5px; }
+  }
+
   /* ---- inspect overlay ---- */
   #inspect {
     position: fixed; inset: 0; z-index: 50; display: none;
@@ -146,12 +163,12 @@
   }
   body.joy #joy, body.joy #joyknob { display: block; }
   #fab {
-    position: fixed; left: 50%; transform: translateX(-50%); bottom: 26px; z-index: 42;
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 42;
     align-items: center; justify-content: center;
-    padding: 13px 20px; border-radius: 30px; cursor: pointer;
+    padding: 10px 17px; border-radius: 30px; cursor: pointer;
     background: rgba(20,21,26,0.92); color: #f4f1ea;
     border: 1px solid rgba(255,255,255,0.25);
-    font-family: 'Space Mono', monospace; font-size: 13px; letter-spacing: 0.06em;
+    font-family: 'Space Mono', monospace; font-size: 11.5px; letter-spacing: 0.06em;
   }
   body.touch #fab.show { display: flex; }
   body.touch #cup { pointer-events: auto; }

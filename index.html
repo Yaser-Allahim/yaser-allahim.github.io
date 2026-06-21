@@ -650,7 +650,9 @@
     #chinbtns{gap:8px;}
   }
 
-  @media (max-width:700px){
+  /* compact chrome on narrow, touch, OR short (landscape-phone) screens so the
+     glass keeps most of the height instead of the bezel and chin eating it */
+  @media (max-width:700px), (pointer:coarse), (max-height:480px){
     #screenmask{left:8px;right:8px;top:8px;bottom:54px;border-radius:12px;}
     #btop{height:8px;}
     #bleft,#bright{top:8px;bottom:54px;width:8px;}
