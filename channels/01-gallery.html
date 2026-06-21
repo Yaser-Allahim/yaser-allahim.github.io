@@ -393,24 +393,19 @@
     var next = 1 - liveSlot;
     var img = slots[next].querySelector("img");
     if (item.work.live) {
-      img.src = liveScreen(item.work, item.coll);
       curLive = item.work;
       launchPill.textContent = item.work.wip ? "✶ WIP" : "● LIVE";
       launchBtn.classList.add("on");
     } else {
-      img.src = encodeURI(BASE + item.work.f);
       curLive = null;
       launchBtn.classList.remove("on");
     }
     img.alt = item.work.t;
-
-    function swap() {
-      slots[next].classList.add("on");
-      slots[liveSlot].classList.remove("on");
-      liveSlot = next;
-    }
-    if (img.complete) swap();
-    else { img.onload = swap; img.onerror = swap; }
+    img.src = item.work.live ? liveScreen(item.work, item.coll) : encodeURI(BASE + item.work.f);
+    // crossfade right away; preload(idx+1) keeps the next image hot, so the frame isn't empty
+    slots[next].classList.add("on");
+    slots[liveSlot].classList.remove("on");
+    liveSlot = next;
 
     plaque.classList.remove("on");
     void plaque.offsetWidth;

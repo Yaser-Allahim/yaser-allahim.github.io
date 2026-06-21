@@ -2,7 +2,7 @@ window.TuwaiqGolf = (function () {
   'use strict';
 
   /* ── Path constants ─────────────────────────────────── */
-  /* served from channels/13-golf.html; meme assets live in /tuwaiq/Useful Assets/memes/ */
+  /* served from channels/07-golf.html; meme assets live in /tuwaiq/Useful Assets/memes/ */
   var MEME_PATH = '../tuwaiq/Useful%20Assets/memes/';
 
   /* ── Sprite image handles ───────────────────────────── */

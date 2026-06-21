@@ -8,6 +8,8 @@
 <meta name="author" content="Yaser Allahim">
 <meta name="theme-color" content="#0a0b0e">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:title" content="YSR·TV">
 <meta property="og:description" content="A portfolio disguised as a television. Surf the channels.">
@@ -348,7 +350,7 @@
     display:flex;align-items:center;justify-content:center;
     font-family:'Space Mono',monospace;font-size:22px;color:var(--inkfade);
     opacity:0;transition:opacity 0.2s;
-    user-select:none;
+    -webkit-user-select:none;user-select:none;
   }
   #prevtab{left:0;}
   #nexttab{right:0;}
@@ -357,7 +359,7 @@
   #prevtab.off,#nexttab.off{display:none;}
   #flipcorner,#flipcornerL{
     position:absolute;bottom:0;width:96px;height:96px;z-index:60;
-    cursor:grab;user-select:none;touch-action:none;
+    cursor:grab;-webkit-user-select:none;user-select:none;touch-action:none;
   }
   #flipcorner{right:0;}
   #flipcornerL{left:0;}
@@ -376,6 +378,51 @@
     transition:border-width 0.2s;
   }
   #flipcornerL:hover::after{border-bottom-width:42px;border-right-width:42px;}
+
+  /* single-page book for touch screens: flatten the 3D spread to one page, scale it
+     to fill the width, and let it scroll if it runs tall */
+  #bookwrap.single #bookstage{align-items:flex-start;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 0 92px;}
+  #bookwrap.single #bookscaler{transform-origin:top center;}
+  #bookwrap.single.open #book{transform:none !important;}
+  #bookwrap.single #book{filter:drop-shadow(0 12px 28px rgba(0,0,0,0.55));}
+  #bookwrap.single #book .baseL,
+  #bookwrap.single #book .baseR,
+  #bookwrap.single #book .sheet,
+  #bookwrap.single #book .sheet .pf,
+  #bookwrap.single #book .sheet .pb{
+    position:absolute;left:0;top:0;width:100%;height:100%;
+    transform:none;-webkit-backface-visibility:visible;backface-visibility:visible;border-radius:8px;
+  }
+  #bookwrap.single #book .baseL,
+  #bookwrap.single #book .baseR,
+  #bookwrap.single #book .sheet .pf,
+  #bookwrap.single #book .sheet .pb{display:none;}
+  #bookwrap.single #book .sheet{display:block;pointer-events:none;}
+  #bookwrap.single #book .mpactive{display:block !important;z-index:4;pointer-events:auto;}
+  #bookwrap.single #prevtab,#bookwrap.single #nexttab,
+  #bookwrap.single #flipcorner,#bookwrap.single #flipcornerL,#bookwrap.single .curl{display:none !important;}
+  /* mobile book chrome: close button + bottom page nav */
+  #mclose,#mnav{display:none;}
+  #bookwrap.single.open #mclose,#bookwrap.single.open #mnav{display:flex;}
+  #mclose{
+    position:fixed;top:12px;right:12px;z-index:62;width:44px;height:44px;
+    align-items:center;justify-content:center;border-radius:50%;cursor:pointer;
+    background:rgba(20,21,26,0.92);color:#e8e6e1;border:1px solid rgba(255,255,255,0.22);
+    font-family:'Space Mono',monospace;font-size:18px;
+  }
+  #mnav{
+    position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:62;
+    align-items:center;gap:14px;padding:6px 8px;border-radius:30px;
+    background:rgba(20,21,26,0.92);border:1px solid rgba(255,255,255,0.2);
+  }
+  #mnav button{
+    width:46px;height:46px;border-radius:50%;cursor:pointer;
+    background:linear-gradient(to bottom,#2a2c36,#1a1b22);color:#e8e6e1;
+    border:1px solid rgba(255,255,255,0.18);font-size:22px;line-height:1;
+  }
+  #mnav button:disabled{opacity:0.35;}
+  #mpageno{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:1px;
+    color:rgba(232,230,225,0.8);min-width:48px;text-align:center;}
 
   /* ---- print typography ---- */
   .mast{
@@ -559,6 +606,50 @@
     color:rgba(232,230,225,0.55);line-height:1.9;
   }
 
+  /* ch 01 chooser: touch viewers pick the 3D museum or the slideshow */
+  #ch01choose{
+    position:fixed; top:14px; left:14px; right:14px; bottom:64px; z-index:6; display:none;
+    flex-direction:column; align-items:center; justify-content:center; gap:18px;
+    background:radial-gradient(circle at 50% 42%, #14161d, #07080b); text-align:center; padding:24px;
+  }
+  #ch01choose.on{ display:flex; }
+  #ch01choose .cc-title{ font-family:'Space Mono',monospace; letter-spacing:4px; font-size:13px; color:var(--green); }
+  #ch01choose .cc-sub{ font-family:'Space Mono',monospace; font-size:11px; letter-spacing:2px; color:rgba(232,230,225,0.45); }
+  #ch01choose .cc-opts{ display:flex; gap:16px; flex-wrap:wrap; justify-content:center; }
+  #ch01choose .cc-opt{
+    display:flex; flex-direction:column; gap:6px; align-items:center; width:210px; max-width:42vw;
+    padding:22px 18px; cursor:pointer; color:#e8e6e1; font-family:'Space Grotesk',sans-serif;
+    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.2); border-radius:10px;
+  }
+  #ch01choose .cc-opt:hover{ background:rgba(69,255,156,0.08); border-color:rgba(69,255,156,0.4); }
+  #ch01choose .cc-opt b{ font-size:16px; }
+  #ch01choose .cc-opt span{ font-family:'Space Mono',monospace; font-size:10.5px; letter-spacing:1px; color:rgba(232,230,225,0.5); }
+
+  /* phones get nudged to landscape: the TV is a widescreen object */
+  #rotate{
+    display:none;position:fixed;inset:0;z-index:9999;background:#0a0b0e;
+    flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:28px;color:#e8e6e1;font-family:'Space Mono',monospace;
+  }
+  #rotate .rphone{
+    width:46px;height:78px;border:3px solid var(--green);border-radius:9px;
+    margin-bottom:30px;box-shadow:0 0 18px rgba(69,255,156,0.35);
+    animation:rphone 2.4s ease-in-out infinite;
+  }
+  @keyframes rphone{0%,28%{transform:rotate(0);}58%,100%{transform:rotate(90deg);}}
+  #rotate .rtitle{font-size:13px;letter-spacing:4px;color:var(--green);}
+  #rotate .rmsg{margin-top:14px;font-size:13px;line-height:1.9;letter-spacing:1px;color:rgba(232,230,225,0.75);}
+  #rotate .rfoot{margin-top:26px;font-size:10px;letter-spacing:2px;color:rgba(232,230,225,0.35);}
+  @media (orientation:portrait) and (pointer:coarse){ #rotate{display:flex;} }
+
+  /* touch devices: drop the keyboard hint and grow the tap targets */
+  @media (pointer:coarse){
+    #chinhint{display:none;}
+    .tvbtn{padding:11px 15px;font-size:12px;min-height:44px;}
+    .volbtn{min-width:46px;}
+    #chinbtns{gap:8px;}
+  }
+
   @media (max-width:700px){
     #screenmask{left:8px;right:8px;top:8px;bottom:54px;border-radius:12px;}
     #btop{height:8px;}
@@ -639,7 +730,7 @@
   </section>
 
   <section class="channel" id="ch01" data-ch="01" data-name="the gallery">
-    <iframe class="chframe" id="ch01frame" src="channels/01-gallery.html" title="CH 01 — The Gallery"></iframe>
+    <iframe class="chframe" id="ch01frame" title="CH 01 — The Gallery"></iframe>
     <!-- PSX console boot: plays once per power-on, over the museum, then hands off -->
     <iframe class="chframe bootframe" id="bootframe" title="System Boot"></iframe>
   </section>
@@ -652,21 +743,21 @@
     <iframe class="chframe" id="ch03frame" src="channels/03-teleshopping.html" title="CH 03 — TeleHire Network"></iframe>
   </section>
 
-  <section class="channel" id="ch10" data-ch="10" data-name="the arcade">
-    <!-- ~77MB Godot build: src is set lazily on first tune (see mods['10']) -->
-    <iframe class="chframe" id="ch10frame" title="CH 10 — The Arcade"></iframe>
+  <section class="channel" id="ch04" data-ch="04" data-name="the arcade">
+    <!-- ~77MB Godot build: src is set lazily on first tune (see mods['04']) -->
+    <iframe class="chframe" id="ch04frame" title="CH 04 — The Arcade"></iframe>
   </section>
 
-  <section class="channel" id="ch11" data-ch="11" data-name="snake">
-    <iframe class="chframe" id="ch11frame" title="CH 11 — Snake"></iframe>
+  <section class="channel" id="ch05" data-ch="05" data-name="snake">
+    <iframe class="chframe" id="ch05frame" title="CH 05 — Snake"></iframe>
   </section>
 
-  <section class="channel" id="ch12" data-ch="12" data-name="cube clicker">
-    <iframe class="chframe" id="ch12frame" title="CH 12 — Cube Clicker"></iframe>
+  <section class="channel" id="ch06" data-ch="06" data-name="cube clicker">
+    <iframe class="chframe" id="ch06frame" title="CH 06 — Cube Clicker"></iframe>
   </section>
 
-  <section class="channel" id="ch13" data-ch="13" data-name="uncanny golf">
-    <iframe class="chframe" id="ch13frame" title="CH 13 — Uncanny Golf"></iframe>
+  <section class="channel" id="ch07" data-ch="07" data-name="uncanny golf">
+    <iframe class="chframe" id="ch07frame" title="CH 07 — Uncanny Golf"></iframe>
   </section>
 
   <section class="channel" id="chNS" data-ch="NS" data-name="no signal">
@@ -710,6 +801,22 @@
 </div>
 
 <canvas id="staticcv"></canvas>
+
+<div id="ch01choose">
+  <div class="cc-title">CH 01 — THE GALLERY</div>
+  <div class="cc-sub">choose your broadcast</div>
+  <div class="cc-opts">
+    <button class="cc-opt" data-view="museum"><b>walk the museum</b><span>first-person 3D · touch controls</span></button>
+    <button class="cc-opt" data-view="slideshow"><b>view the slideshow</b><span>tap through the works</span></button>
+  </div>
+</div>
+
+<div id="rotate" aria-hidden="true">
+  <div class="rphone"></div>
+  <div class="rtitle">WIDESCREEN BROADCAST</div>
+  <div class="rmsg">YSR·TV airs in landscape.<br>please turn your device sideways.</div>
+  <div class="rfoot">we'll be right back</div>
+</div>
 
 <div id="boot"><div id="bootlogo"><img src="assets/ysrtv-logo.png" alt="YSR·TV"><span>quality nonsense television</span></div></div>
 <div id="bluescr">
@@ -865,23 +972,23 @@
           <div class="smallcaps">tonight's programming · continued</div>
           <hr class="printrule dbl">
           <div style="margin-top:8px;">
-            <div class="listing" data-ch="10">
-              <div class="lhead"><span class="lch">CH 10</span><span class="lname">the arcade</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
+            <div class="listing" data-ch="04">
+              <div class="lhead"><span class="lch">CH 04</span><span class="lname">the arcade</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
               <div class="ldesc">a maze, a yellow circle, four ghosts legal won't let us name. built from scratch — mistaken for the original.</div>
               <div class="ltune">tune in →</div>
             </div>
-            <div class="listing" data-ch="11">
-              <div class="lhead"><span class="lch">CH 11</span><span class="lname">snake</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
+            <div class="listing" data-ch="05">
+              <div class="lhead"><span class="lch">CH 05</span><span class="lname">snake</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
               <div class="ldesc">the classic, with a live global high-score board. arrows to steer, [esc] to walk away. the leaderboard remembers.</div>
               <div class="ltune">tune in →</div>
             </div>
-            <div class="listing" data-ch="12">
-              <div class="lhead"><span class="lch">CH 12</span><span class="lname">cube clicker</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
-              <div class="ldesc">click the cube. the number goes up. it saves your progress — that's the trap. a full idle game living on channel 12.</div>
+            <div class="listing" data-ch="06">
+              <div class="lhead"><span class="lch">CH 06</span><span class="lname">cube clicker</span><span class="lsig">signal <b>▮▮▮▮</b></span></div>
+              <div class="ldesc">click the cube. the number goes up. it saves your progress — that's the trap. a full idle game living on channel 06.</div>
               <div class="ltune">tune in →</div>
             </div>
-            <div class="listing" data-ch="13">
-              <div class="lhead"><span class="lch">CH 13</span><span class="lname">uncanny golf</span><span class="lsig">signal <b>▮▮▮</b>▮</span></div>
+            <div class="listing" data-ch="07">
+              <div class="lhead"><span class="lch">CH 07</span><span class="lname">uncanny golf</span><span class="lsig">signal <b>▮▮▮</b>▮</span></div>
               <div class="ldesc">minigolf, but the physics took something personal. a cube, a hole, and a creeping sense of wrongness.</div>
               <div class="ltune">tune in →</div>
             </div>
@@ -903,12 +1010,18 @@
     </div>
     </div>
   </div>
+  <div id="mclose" title="close">✕</div>
+  <div id="mnav">
+    <button id="mprev" aria-label="previous page">‹</button>
+    <span id="mpageno">1 / 6</span>
+    <button id="mnext" aria-label="next page">›</button>
+  </div>
 </div>
 
 <script>
 const $ = s => document.querySelector(s);
 
-const ORDER = ['01','02','03','10','11','12','13','00'];
+const ORDER = ['01','02','03','04','05','06','07','00'];
 let cur = 0;
 let activeCh = null;
 let booted = false;
@@ -1564,6 +1677,10 @@ const flipped = [false, false];
 const PAGE_W = 470, PAGE_H = 560, SEGN = 6, SEGW = PAGE_W / SEGN;
 
 function sizeBook(){
+  if(singleMode()){                          // one page, scaled to fill the width
+    $('#bookscaler').style.transform = 'scale(' + ((innerWidth * 0.96) / PAGE_W) + ')';
+    return;
+  }
   const s = Math.min(1, (innerWidth * 0.94) / 940, (innerHeight * 0.80) / 560);
   $('#bookscaler').style.transform = 'scale(' + s + ')';
 }
@@ -1679,6 +1796,7 @@ function animateSheet(i, to, dur, done){
   }, dur + 300);
 }
 function flipPageNext(){
+  if(singleMode()){ showMPage(mpage + 1); return; }
   const i = topUnflipped();
   if(i < 0) return;
   flipped[i] = true;
@@ -1687,6 +1805,7 @@ function flipPageNext(){
   updateTabs();
 }
 function flipPagePrev(){
+  if(singleMode()){ showMPage(mpage - 1); return; }
   const i = lastFlipped();
   if(i < 0) return;
   flipped[i] = false;
@@ -1696,6 +1815,39 @@ function flipPagePrev(){
 }
 $('#nexttab').onclick = flipPageNext;
 $('#prevtab').onclick = flipPagePrev;
+
+/* --- single-page book for touch: same pages, shown one at a time --- */
+function singleMode(){ return matchMedia('(pointer: coarse)').matches || !!window.__forceSingle; }
+const MPAGES = ['.baseL', '#sheetA .pf', '#sheetA .pb', '#sheetB .pf', '#sheetB .pb', '.baseR'].map(s => $(s));
+let mpage = 0;
+function showMPage(i, silent){
+  const prev = mpage;
+  mpage = Math.max(0, Math.min(MPAGES.length - 1, i));
+  MPAGES.forEach((p, k) => p && p.classList.toggle('mpactive', k === mpage));
+  $('#mpageno').textContent = (mpage + 1) + ' / ' + MPAGES.length;
+  $('#mprev').disabled = mpage === 0;
+  $('#mnext').disabled = mpage === MPAGES.length - 1;
+  const st = $('#bookstage'); if(st) st.scrollTop = 0;
+  if(!silent && mpage !== prev) Sound.paper();
+}
+$('#mclose').onclick = closeBook;
+$('#mprev').onclick = () => showMPage(mpage - 1);
+$('#mnext').onclick = () => showMPage(mpage + 1);
+/* swipe sideways to turn pages; vertical still scrolls a tall page */
+(function(){
+  const st = $('#bookstage');
+  let sx = 0, sy = 0, tr = false;
+  st.addEventListener('touchstart', e => {
+    if(!bookOpen || !singleMode() || e.touches.length !== 1){ tr = false; return; }
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; tr = true;
+  }, {passive: true});
+  st.addEventListener('touchend', e => {
+    if(!tr) return;
+    tr = false;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.7) showMPage(mpage + (dx < 0 ? 1 : -1));
+  }, {passive: true});
+})();
 
 /* right corner: hover pre-curl + drag forward */
 (function(){
@@ -1809,6 +1961,13 @@ function openBook(){
   if(!booted) return;
   Sound.click();
   bookOpen = true;
+  if(singleMode()){
+    bookwrap.classList.add('single');
+    showMPage(0, true);
+    sizeBook();
+  } else {
+    bookwrap.classList.remove('single');
+  }
   bookwrap.classList.add('open');
 }
 function closeBook(){
@@ -1819,6 +1978,24 @@ function closeBook(){
 $('#bookbtn').onclick = openBook;
 $('#bookdim').onclick = closeBook;
 $('#surfbtn').onclick = () => { if(booted) flip(cur + 1); };
+
+/* touch: a horizontal swipe surfs channels. vertical is left alone so the CV still
+   scrolls, and touches inside a channel iframe go to the iframe, so the games and
+   teletext keep their own gestures. */
+(function(){
+  let sx = 0, sy = 0, tracking = false;
+  addEventListener('touchstart', e => {
+    if(!booted || bookOpen || e.touches.length !== 1){ tracking = false; return; }
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; tracking = true;
+  }, {passive: true});
+  addEventListener('touchend', e => {
+    if(!tracking) return;
+    tracking = false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - sx, dy = t.clientY - sy;
+    if(Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.7) flip(dx < 0 ? cur + 1 : cur - 1);
+  }, {passive: true});
+})();
 
 document.querySelectorAll('.listing[data-ch]').forEach(el => {
   el.addEventListener('click', () => {
@@ -1852,11 +2029,27 @@ function iframeChannel(frameSel){
     send: send
   };
 }
-/* ch 01 picks its broadcast: the walkable museum on desktops,
-   the slideshow for touch / reduced-motion viewers (same data, same number) */
-const museumMode = !(window.matchMedia('(pointer: coarse)').matches ||
-                     window.matchMedia('(prefers-reduced-motion: reduce)').matches);
-if(museumMode) $('#ch01frame').src = 'channels/01-museum.html';
+/* ch 01 picks its broadcast: desktop walks the 3D museum (with a console boot),
+   reduced-motion gets the slideshow, and touch viewers choose which they want */
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const touchUI = window.matchMedia('(pointer: coarse)').matches || new URLSearchParams(location.search).get('touch') === '1';
+const desktopMuseum = !reduceMotion && !touchUI;
+const CH01_KEY = 'ysrtv-ch01';
+let ch01View = desktopMuseum ? 'museum' : reduceMotion ? 'slideshow' : sessionStorage.getItem(CH01_KEY);
+const ch01mod = iframeChannel('#ch01frame');
+function ch01Apply(view){
+  ch01View = view;
+  $('#ch01frame').src = view === 'museum' ? 'channels/01-museum.html' : 'channels/01-gallery.html';
+}
+if(ch01View) ch01Apply(ch01View);   // desktop museum, reduced-motion slideshow, or a remembered touch choice
+document.querySelectorAll('#ch01choose .cc-opt').forEach(b => {
+  b.onclick = () => {
+    sessionStorage.setItem(CH01_KEY, b.dataset.view);
+    $('#ch01choose').classList.remove('on');
+    ch01Apply(b.dataset.view);
+    ch01mod.start();
+  };
+});
 /* channels with captured input (pointer lock) forward shell keys up */
 window.addEventListener('message', e => {
   const d = e.data || {};
@@ -1866,9 +2059,8 @@ window.addEventListener('message', e => {
   }
 });
 
-/* ch 01 boots like a console the first time it's tuned each power-on
+/* the desktop museum boots like a console the first time it's tuned each power-on
    (in-memory flag: a page refresh is the only way to see it again) */
-const ch01mod = iframeChannel('#ch01frame');
 let bootPlayed = false;
 function dropBootOverlay(){
   const bf = $('#bootframe');
@@ -1879,7 +2071,8 @@ function dropBootOverlay(){
 }
 mods['01'] = {
   start(){
-    if(museumMode && !bootPlayed){
+    if(ch01View === null){ $('#ch01choose').classList.add('on'); return; }   // touch viewer hasn't chosen yet
+    if(ch01View === 'museum' && desktopMuseum && !bootPlayed){
       bootPlayed = true;
       const bf = $('#bootframe');
       bf.src = 'channels/boot.html';
@@ -1889,6 +2082,7 @@ mods['01'] = {
     }
   },
   stop(){
+    $('#ch01choose').classList.remove('on');
     dropBootOverlay();                // surfing away mid-boot ejects the disc
     ch01mod.stop();
   },
@@ -1904,10 +2098,10 @@ window.addEventListener('message', e => {
 mods['02'] = iframeChannel('#ch02frame');
 mods['03'] = iframeChannel('#ch03frame');
 
-/* ch 10, the arcade. a ~77MB Godot build, so the iframe stays empty until first tuned */
-mods['10'] = (function(){
-  const fr = $('#ch10frame');
-  const im = iframeChannel('#ch10frame');
+/* ch 04, the arcade. a ~77MB Godot build, so the iframe stays empty until first tuned */
+mods['04'] = (function(){
+  const fr = $('#ch04frame');
+  const im = iframeChannel('#ch04frame');
   let loaded = false;
   return {
     start(){
@@ -1921,7 +2115,7 @@ mods['10'] = (function(){
   };
 })();
 
-/* ch 11-13, the rest of the arcade. each is a standalone page that mounts its game
+/* ch 05-07, the rest of the arcade. each is a standalone page that mounts its game
    on first tune and surfs onward through the game's own exit */
 function lazyChannel(frameSel, src){
   const fr = $(frameSel);
@@ -1933,9 +2127,9 @@ function lazyChannel(frameSel, src){
     send: im.send
   };
 }
-mods['11'] = lazyChannel('#ch11frame', 'channels/11-snake.html');
-mods['12'] = lazyChannel('#ch12frame', 'channels/12-clicker.html');
-mods['13'] = lazyChannel('#ch13frame', 'channels/13-golf.html');
+mods['05'] = lazyChannel('#ch05frame', 'channels/05-snake.html');
+mods['06'] = lazyChannel('#ch06frame', 'channels/06-clicker.html');
+mods['07'] = lazyChannel('#ch07frame', 'channels/07-golf.html');
 
 /* ---------- keys ---------- */
 window.addEventListener('keydown', e => {

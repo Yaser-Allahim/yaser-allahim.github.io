@@ -1,6 +1,6 @@
 # Pac-Man web export
 
-The Godot 4.x web export lives here, mounted as channel 10 (the arcade).
+The Godot 4.x web export lives here, mounted as channel 04 (the arcade).
 
 ## Re-exporting (Godot 4.x, Project > Export > Web)
 

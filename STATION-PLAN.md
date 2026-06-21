@@ -216,7 +216,26 @@
       `assets/og-image.png` (1200x630 test-card card, generated with System.Drawing); description,
       author, theme-color, OpenGraph + Twitter tags in the head (og:url/image point at
       yaser-allahim.github.io — update if the domain changes).
-- [ ] mobile pass: swipe to surf, bigger tap targets, book readability on phones
+- [~] mobile pass (started 2026-06-19): decision = **rotate prompt** (the TV is designed for
+      landscape; portrait touch gets a "turn sideways" gate). DONE: rotate gate
+      (`@media (orientation:portrait) and (pointer:coarse)`), touch tap targets + keyboard-hint
+      hidden on `pointer:coarse`, **swipe-to-surf** (horizontal swipe changes channel, vertical left
+      for scroll, iframe channels keep their own gestures), and the **single-page mobile book**
+      (option A): on touch the 3D spread flattens to one page scaled to fill the width, scrolls if
+      tall, with a bottom prev/next nav + page counter + close button and swipe-to-turn; desktop
+      spread untouched. Verified via a `window.__forceSingle` debug flag.
+      **Museum touch controls + chooser (2026-06-20):** the 3D museum (`01-museum.html`) now has touch
+      controls (floating left-stick to walk folded into move(), drag-to-look on yaw/pitch, a contextual
+      action button + tap to inspect, tap-to-enter), gated on `pointer:coarse` (or `?touch=1`). And the
+      shell now **asks touch viewers** which broadcast they want: a `#ch01choose` overlay ("walk the
+      museum" / "view the slideshow"), choice remembered per session; desktop still auto-loads the
+      museum (+console boot), reduced-motion still auto-loads the slideshow. Both verified headlessly
+      via debug overrides. STILL TODO (phase 3, needs landscape device eyes): CV scroll, teletext touch
+      page-turn, telehire stage scaling, and a play-test of each game incl. Pac-Man touch.
+      **Also renumbered the games 10-13 -> 04-07** (closes the gap the deleted filler left; lineup is
+      now contiguous 00-07, the book's two listing pages map to 00-03 and 04-07, games are
+      single-digit dialable). Renamed channel files to 05-snake/06-clicker/07-golf; pacman folder
+      unchanged (now ch 04). Deep links are `?ch=04..07`.
 - [x] honor `prefers-reduced-motion` (2026-06-19). First-time visitors with the OS reduce-motion
       flag get `eyes.still = true` (the static stops animating; channel-change burst and NS snow both
       read it). Returning visitors keep their saved eye-doctor choice. Museum already falls back to
@@ -226,7 +245,13 @@
       the source. Hidden channels stay paused (iframes) and the heavy ones (museum, pacman, the games)
       already lazy-load. NOTE: the 3.66MB original is now unreferenced; remove it from the repo if you
       don't need the source there.
-- [ ] cross-browser sanity: Firefox + Safari
+- [~] cross-browser sanity (2026-06-19): static audit done. Already clean (no backdrop-filter / :has(),
+      AudioContext + backface-visibility + background-clip:text all carry webkit fallbacks,
+      -webkit-overflow-scrolling present). Fixes: added `-webkit-user-select` for older Safari, and
+      PNG favicon + apple-touch-icon fallbacks (`assets/favicon-32.png`, `assets/apple-touch-icon.png`)
+      since Safari doesn't reliably show the SVG favicon. STILL NEEDS real-browser eyes (can't run
+      here): actual render in Firefox/Safari, iOS Safari fixed-bottom chin vs the toolbar/home
+      indicator (safe-area), and the museum (WebGL2) + Godot game in Safari.
 - [x] README.md written (2026-06-19) — fresh, plain-spoken, no Astro leftovers (there were none).
 - [x] **Code-comment cleanup** (2026-06-19, Yaser's ask): de-AI'd the comments in index.html (dropped
       em dashes, trimmed the verbose multi-sentence rationale to terse human notes), the pacman wrapper,

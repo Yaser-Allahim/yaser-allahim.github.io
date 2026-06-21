@@ -130,6 +130,31 @@
     50% { transform: rotate(12deg); }
     75% { transform: rotate(-10deg); }
   }
+
+  /* ---- touch controls (mobile) ---- */
+  #joy, #joyknob, #fab { display: none; }
+  body.touch #view { touch-action: none; }
+  #joy {
+    position: fixed; width: 116px; height: 116px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.22); background: rgba(255,255,255,0.05);
+    z-index: 40; pointer-events: none; transform: translate(-50%, -50%);
+  }
+  #joyknob {
+    position: fixed; width: 50px; height: 50px; border-radius: 50%;
+    background: rgba(255,255,255,0.3); border: 2px solid rgba(255,255,255,0.45);
+    z-index: 41; pointer-events: none; transform: translate(-50%, -50%);
+  }
+  body.joy #joy, body.joy #joyknob { display: block; }
+  #fab {
+    position: fixed; left: 50%; transform: translateX(-50%); bottom: 26px; z-index: 42;
+    align-items: center; justify-content: center;
+    padding: 13px 20px; border-radius: 30px; cursor: pointer;
+    background: rgba(20,21,26,0.92); color: #f4f1ea;
+    border: 1px solid rgba(255,255,255,0.25);
+    font-family: 'Space Mono', monospace; font-size: 13px; letter-spacing: 0.06em;
+  }
+  body.touch #fab.show { display: flex; }
+  body.touch #cup { pointer-events: auto; }
 </style>
 </head>
 <body>
@@ -163,6 +188,9 @@
       <div class="k"><b>click</b> enter &nbsp; <b>wasd</b> walk &nbsp; <b>shift</b> hurry &nbsp; <b>mouse</b> look<br><b>e</b> inspect &nbsp; <b>esc</b> release &nbsp; <b>space</b> change channel</div>
     </div>
   </div>
+
+  <div id="joy"></div><div id="joyknob"></div>
+  <div id="fab"></div>
 
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
@@ -668,7 +696,7 @@ function hangWork(work, coll, d, u, side, yb) {
     const screen = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat({ map: tex }));
     screen.position.z = 0.07;
     grp.add(back, screen);
-    const lcard = eCard(work.t, coll.name, '[E] step inside');
+    const lcard = eCard(work.t, coll.name, TOUCH ? 'tap to step inside' : '[E] step inside');
     lcard.position.set(w / 2 + 0.36, -0.25, 0.05);
     grp.add(lcard);
     scene.add(grp);
@@ -708,7 +736,7 @@ function hangWork(work, coll, d, u, side, yb) {
     art.position.z = 0.08;
     grp.add(back, matb, art);
 
-    const card = eCard(work.t, coll.name, '[E] to read');
+    const card = eCard(work.t, coll.name, TOUCH ? 'tap to view' : '[E] to read');
     card.position.set(w / 2 + 0.36, -0.25, 0.05);
     grp.add(card);
     scene.add(grp);
@@ -977,7 +1005,7 @@ function buildMapStand() {
     x: mx + Math.sin(aM + Math.PI) * 1.0, z: mz + Math.cos(aM + Math.PI) * 1.0, yb: 0, r: 1.9,
     title: 'Museum Map',
     meta: 'floor directory · drawn by the building itself<br>new floors appear as the work does',
-    credit: 'press E to enlarge',
+    credit: TOUCH ? 'tap to enlarge' : 'press E to enlarge',
     img: mapDataURL
   });
 }
@@ -1208,8 +1236,8 @@ function buildLobby(collections) {
   points.push({
     x: gx - 1.7, z: gz - 1.7, yb: 0, r: 2.0,
     title: 'Gift Shop',
-    meta: 'everything is free — this is a portfolio<br>arabic coffee, on the house<br>right-click to sip. shake when done.',
-    credit: 'E — take a coffee · yaserallahim@gmail.com',
+    meta: 'everything is free — this is a portfolio<br>arabic coffee, on the house<br>' + (TOUCH ? 'tap the cup to sip.' : 'right-click to sip. shake when done.'),
+    credit: (TOUCH ? 'tap' : 'E') + ' — take a coffee · yaserallahim@gmail.com',
     img: null, coffee: true
   });
   zones.push({ test: (x, z) => Math.hypot(x - gx, z - gz) < 3, y0: -1, y1: 3, name: 'gift shop' });
@@ -1336,10 +1364,14 @@ let yaw = 0, pitch = 0;
 const keys = {};
 let locked = false;
 const enterEl = document.getElementById('enter');
+/* touch: drive look/move from the screen instead of pointer lock + wasd */
+const TOUCH = matchMedia('(pointer: coarse)').matches || new URLSearchParams(location.search).get('touch') === '1';
+const tj = { fwd: 0, str: 0 };   // analog joystick vector, folded into move()
+let touchOn = false;
 
-function lock() { canvas.requestPointerLock && canvas.requestPointerLock(); }
+function lock() { if (TOUCH) return; canvas.requestPointerLock && canvas.requestPointerLock(); }
 enterEl.addEventListener('click', lock);
-canvas.addEventListener('click', () => { if (!locked) lock(); });
+canvas.addEventListener('click', () => { if (!TOUCH && !locked) lock(); });
 document.addEventListener('pointerlockchange', () => {
   locked = document.pointerLockElement === canvas;
   enterEl.classList.toggle('off', locked || inspectOpen);
@@ -1357,6 +1389,70 @@ document.addEventListener('keydown', (e) => {
   else if (e.code === 'KeyE') { onUse(); }
 });
 document.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+/* ---- touch controls: floating left-stick to walk, drag to look, button/tap to inspect ---- */
+if (TOUCH) {
+  document.body.classList.add('touch');
+  const k = enterEl.querySelector('.k');
+  if (k) k.innerHTML = '<b>tap</b> to enter &nbsp; <b>left side</b> walk &nbsp; <b>drag</b> look<br><b>tap a frame</b> to view &nbsp; <b>tv controls</b> to leave';
+  const joy = document.getElementById('joy'), knob = document.getElementById('joyknob'), fab = document.getElementById('fab');
+  const RAD = 52;
+  let joyId = null, joyOx = 0, joyOy = 0;
+  let lookId = null, lookX = 0, lookY = 0, lookX0 = 0, lookY0 = 0;
+  enterEl.addEventListener('touchstart', (e) => { e.preventDefault(); touchOn = true; enterEl.classList.add('off'); }, { passive: false });
+  function onStart(e) {
+    if (!touchOn || inspectOpen) return;
+    for (const t of e.changedTouches) {
+      if (t.clientX < innerWidth * 0.5 && joyId === null) {
+        joyId = t.identifier; joyOx = t.clientX; joyOy = t.clientY;
+        joy.style.left = knob.style.left = joyOx + 'px';
+        joy.style.top = knob.style.top = joyOy + 'px';
+        document.body.classList.add('joy');
+      } else if (lookId === null) {
+        lookId = t.identifier; lookX = lookX0 = t.clientX; lookY = lookY0 = t.clientY;
+      }
+    }
+  }
+  function onMove(e) {
+    if (!touchOn || inspectOpen) return;
+    for (const t of e.changedTouches) {
+      if (t.identifier === joyId) {
+        let dx = t.clientX - joyOx, dy = t.clientY - joyOy;
+        const d = Math.hypot(dx, dy);
+        if (d > RAD) { dx = dx / d * RAD; dy = dy / d * RAD; }
+        knob.style.left = (joyOx + dx) + 'px'; knob.style.top = (joyOy + dy) + 'px';
+        if (d < 8) { tj.str = tj.fwd = 0; } else { tj.str = dx / RAD; tj.fwd = -dy / RAD; }
+      } else if (t.identifier === lookId) {
+        yaw -= (t.clientX - lookX) * 0.005;
+        pitch -= (t.clientY - lookY) * 0.005;
+        pitch = Math.max(-1.25, Math.min(1.25, pitch));
+        lookX = t.clientX; lookY = t.clientY;
+      }
+    }
+  }
+  function onEnd(e) {
+    for (const t of e.changedTouches) {
+      if (t.identifier === joyId) { joyId = null; tj.fwd = tj.str = 0; document.body.classList.remove('joy'); }
+      else if (t.identifier === lookId) {
+        if (Math.hypot(t.clientX - lookX0, t.clientY - lookY0) < 12) onUse();   // a tap views the nearest frame
+        lookId = null;
+      }
+    }
+  }
+  canvas.addEventListener('touchstart', onStart, { passive: true });
+  canvas.addEventListener('touchmove', onMove, { passive: true });
+  canvas.addEventListener('touchend', onEnd, { passive: true });
+  canvas.addEventListener('touchcancel', onEnd, { passive: true });
+  fab.addEventListener('click', onUse);
+  window.__fabSync = function () {
+    if (!touchOn || inspectOpen || !nearPoint) { fab.classList.remove('show'); return; }
+    const label = nearPoint.coffee ? 'take a cup'
+      : nearPoint.live ? (nearPoint.wip ? 'step inside (wip)' : 'step inside')
+      : nearPoint.img ? 'take a closer look' : null;
+    if (label) { fab.textContent = label; fab.classList.add('show'); }
+    else fab.classList.remove('show');
+  };
+}
 
 function groundAt(x, z, eyeY) {
   const feet = (eyeY === undefined ? yawObj.position.y : eyeY) - EYE;
@@ -1390,8 +1486,9 @@ function groundAt(x, z, eyeY) {
 }
 
 function move(dt) {
-  const fwd = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0);
-  const str = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0);
+  let fwd = (keys.KeyW || keys.ArrowUp ? 1 : 0) - (keys.KeyS || keys.ArrowDown ? 1 : 0) + tj.fwd;
+  let str = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0) + tj.str;
+  fwd = Math.max(-1, Math.min(1, fwd)); str = Math.max(-1, Math.min(1, str));
   let px = yawObj.position.x, pz = yawObj.position.z;
   const feet = yawObj.position.y - EYE;
   if (fwd || str) {
@@ -1463,7 +1560,7 @@ function proximity() {
       plaqueEl.innerHTML =
         '<div class="pt">' + best.title + '</div>' +
         '<div class="pm">' + best.meta + '</div>' +
-        '<div class="pe">' + (best.img || best.live || best.coffee ? '<b>E</b> &nbsp;' : '') + best.credit + '</div>';
+        '<div class="pe">' + (best.img || best.live || best.coffee ? (TOUCH ? '<b>tap</b> &nbsp;' : '<b>E</b> &nbsp;') : '') + best.credit + '</div>';
       plaqueEl.classList.add('on');
     } else plaqueEl.classList.remove('on');
   }
@@ -1512,7 +1609,7 @@ function toggleInspect() {
     '<div class="pt">' + nearPoint.title + '</div>' +
     '<div class="pm">' + nearPoint.meta + '</div>' +
     '<div class="pe">' + nearPoint.credit + '<br><br>' +
-      (live ? 'click in to interact · ' : '') + 'E / ESC — close</div>';
+      (live ? (TOUCH ? 'tap in to interact · ' : 'click in to interact · ') : '') + (TOUCH ? 'tap outside or ✕ to close' : 'E / ESC — close') + '</div>';
   inspectEl.classList.add('on');
 }
 inspectEl.addEventListener('click', (e) => { if (e.target === inspectEl) toggleInspect(); });
@@ -1574,6 +1671,12 @@ document.addEventListener('mousedown', (e) => {
   }
   sip();
 });
+/* touch: tap the carried cup to sip (no right-click on a phone) */
+if (TOUCH) cupEl.addEventListener('click', () => {
+  if (!hasCup) return;
+  if (refillTimer) { shakeClicks++; if (shakeClicks >= 2) shakeAway(); return; }
+  sip();
+});
 
 /* ===================== loop + channel API ===================== */
 let playing = false, last = 0, rafId = null;
@@ -1587,6 +1690,7 @@ function loop(t) {
   yawObj.rotation.y = yaw;
   camera.rotation.x = pitch;
   proximity();
+  if (window.__fabSync) window.__fabSync();
   renderer.render(scene, camera);
 }
 
@@ -1644,6 +1748,9 @@ window.__museum = {
   get near() { return nearPoint ? nearPoint.title : null; },
   pointList() { return points.map(p => ({ t: p.title, x: +p.x.toFixed(1), z: +p.z.toFixed(1), yb: p.yb })); },
   coffee: { grant: grantCup, sip, get state() { return { hasCup, sips, pending: !!refillTimer }; } },
+  get yaw() { return yaw; },
+  get pitch() { return pitch; },
+  get tj() { return { fwd: tj.fwd, str: tj.str }; },
   use: onUse,
   inspect: toggleInspect,
   render() { yawObj.rotation.y = yaw; camera.rotation.x = pitch; renderer.render(scene, camera); }
