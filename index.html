@@ -48,6 +48,14 @@
     font-family:'Space Grotesk',sans-serif;
     overflow:hidden;
   }
+  /* the whole television is one fixed-size object scaled to fit the screen (see the
+     fit script near the bottom): 1280x720 is the design space everything is laid out
+     against, so the bezel, chin and picture all shrink together instead of reflowing */
+  #set{
+    position:fixed;left:50%;top:50%;width:1280px;height:720px;
+    transform-origin:center center;
+    transform:translate(-50%,-50%) scale(var(--fit,1));
+  }
   #tv{position:fixed;inset:0;background:var(--bg);}
   .channel{position:absolute;inset:0;display:none;}
   .channel.active{display:block;}
@@ -649,25 +657,13 @@
     #chinbtns{gap:8px;}
   }
 
-  /* compact chrome on narrow, touch, OR short (landscape-phone) screens so the
-     glass keeps most of the height instead of the bezel and chin eating it */
-  @media (max-width:700px), (pointer:coarse), (max-height:480px){
-    #screenmask{left:8px;right:8px;top:8px;bottom:54px;border-radius:12px;}
-    #btop{height:8px;}
-    #bleft,#bright{top:8px;bottom:54px;width:8px;}
-    #chin{height:54px;padding:0 12px;}
-    #chinhint{display:none;}
-    #chinlogo img{height:36px;}
-    #chinlogo span{display:none;}
-    #osd{top:20px;right:22px;}
-    #inputmenu{top:20px;left:22px;min-width:160px;}
-    .pro h1{font-size:32px;}
-    .channel iframe.chframe{left:8px;top:8px;width:calc(100% - 16px);height:calc(100% - 62px);}
-  }
+  /* note: the whole set is scaled to fit (see #set), so small screens no longer need
+     a separate compact-chrome layout — the bezel, chin and picture shrink as one */
 </style>
 </head>
 <body>
 
+<div id="set">
 <div id="tv">
 
   <section class="channel" id="ch00" data-ch="00" data-name="the news">
@@ -816,13 +812,6 @@
   </div>
 </div>
 
-<div id="rotate" aria-hidden="true">
-  <div class="rphone"></div>
-  <div class="rtitle">WIDESCREEN BROADCAST</div>
-  <div class="rmsg">YSR·TV airs in landscape.<br>please turn your device sideways.</div>
-  <div class="rfoot">we'll be right back</div>
-</div>
-
 <div id="boot"><div id="bootlogo"><img src="assets/ysrtv-logo.png" alt="YSR·TV"><span>quality nonsense television</span></div></div>
 <div id="bluescr">
   <div id="inputmenu">
@@ -854,6 +843,32 @@
     <div id="led" title="broadcast status"></div>
   </div>
 </div>
+
+</div><!-- /#set -->
+
+<!-- the rotate nudge and channel book live outside the scaled set: they're
+     full-viewport overlays with their own responsive sizing -->
+<div id="rotate" aria-hidden="true">
+  <div class="rphone"></div>
+  <div class="rtitle">WIDESCREEN BROADCAST</div>
+  <div class="rmsg">YSR·TV airs in landscape.<br>please turn your device sideways.</div>
+  <div class="rfoot">we'll be right back</div>
+</div>
+
+<script>
+/* scale the whole set to fit the viewport (letterboxed in plastic, which matches the
+   body background). everything inside #set — bezel, chin, channels — scales together,
+   so nothing reflows or clips on small screens. */
+(function(){
+  var SET_W = 1280, SET_H = 720, set = document.getElementById('set');
+  function fitSet(){
+    set.style.setProperty('--fit', Math.min(innerWidth / SET_W, innerHeight / SET_H));
+  }
+  fitSet();
+  addEventListener('resize', fitSet);
+  addEventListener('orientationchange', fitSet);
+})();
+</script>
 
 <!-- ============ THE CHANNEL BOOK ============ -->
 <div id="bookwrap">
