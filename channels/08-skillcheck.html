@@ -12,7 +12,7 @@
   *{box-sizing:border-box;}
   html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);
     font-family:'Oswald','Bebas Neue',Arial Narrow,system-ui,sans-serif;color:var(--ink);
-    -webkit-user-select:none;user-select:none;cursor:default;}
+    -webkit-user-select:none;user-select:none;cursor:default;touch-action:manipulation;}
 
   #stage-bg{position:fixed;inset:0;
     background:
@@ -159,6 +159,8 @@
   .exit{position:fixed;top:38px;right:16px;z-index:6;font-size:10.5px;letter-spacing:.18em;
     color:#8b8581;text-transform:uppercase;pointer-events:none;}
   .exit b{color:var(--gold);}
+
+  @media (pointer:coarse){ .exit, .ov-hint{display:none;} }
 </style>
 </head>
 <body>
@@ -332,7 +334,6 @@
       try { this.best = parseInt(localStorage.getItem(BEST_KEY) || '0', 10) || 0; } catch (e) {}
       this.dom.bestline.textContent = this.best;
       var self = this;
-      this.dom.stage.addEventListener('click', function () { self.hit(); });
       this.startRun('trial');
       this.drawDial();
     },
@@ -632,7 +633,6 @@
       this.showOverlay(html, function () {
         self.sCanvas = $('s-canvas'); self.sNeedle = $('s-needle'); self.slotsEl = $('slots');
         self.sDialEl = $('s-dial'); self.sFlashEl = $('s-flash'); self.sCapEl = $('s-cap');
-        self.sDialEl.addEventListener('click', function () { self.struggleHit(); });
         self.drawStruggle(); self.renderSNeedle(); self.renderSlots();
         requestAnimationFrame(function () { self.spawnStruggle(); });
       });
@@ -898,6 +898,14 @@
       else SC.hit();
     }
   }, true);
+
+  window.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('button, a')) return;
+    AudioKit.init(); AudioKit.resume();
+    if (SC.screen === 'playing') SC.hit();
+    else if (SC.screen === 'struggling') SC.struggleHit();
+    else if (SC.screen === 'hooked') SC.beginStruggle();
+  });
 
   window.addEventListener('message', function (e) {
     var d = e.data || {};
