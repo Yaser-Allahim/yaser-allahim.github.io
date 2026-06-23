@@ -455,7 +455,7 @@
 
   /* listings */
   .listing{
-    padding:8px 8px 7px;border-bottom:1px solid var(--rule);cursor:pointer;
+    padding:6px 8px 5px;border-bottom:1px solid var(--rule);cursor:pointer;
     transition:background 0.15s;
   }
   .listing:hover{background:rgba(179,56,46,0.07);}
@@ -737,11 +737,11 @@
   </section>
 
   <section class="channel" id="ch02" data-ch="02" data-name="teletext">
-    <iframe class="chframe" id="ch02frame" src="channels/02-teletext.html" title="CH 02 — Teletext"></iframe>
+    <iframe class="chframe" id="ch02frame" title="CH 02 — Teletext"></iframe>
   </section>
 
   <section class="channel" id="ch03" data-ch="03" data-name="telehire network">
-    <iframe class="chframe" id="ch03frame" src="channels/03-teleshopping.html" title="CH 03 — TeleHire Network"></iframe>
+    <iframe class="chframe" id="ch03frame" title="CH 03 — TeleHire Network"></iframe>
   </section>
 
   <section class="channel" id="ch04" data-ch="04" data-name="the arcade">
@@ -759,6 +759,10 @@
 
   <section class="channel" id="ch07" data-ch="07" data-name="uncanny golf">
     <iframe class="chframe" id="ch07frame" title="CH 07 — Uncanny Golf"></iframe>
+  </section>
+
+  <section class="channel" id="ch08" data-ch="08" data-name="the graveyard shift">
+    <iframe class="chframe" id="ch08frame" title="CH 08 — The Graveyard Shift"></iframe>
   </section>
 
   <section class="channel" id="chNS" data-ch="NS" data-name="no signal">
@@ -881,7 +885,7 @@
         <div class="comingsoon">
           <div class="smallcaps">paid programming</div>
           <div class="csbig">Coming soon<br>to YSR·TV</div>
-          <div class="csmono">ch 08 — the movies (awaiting first broadcast)<br>ch 09 — ??? (legal won't let us say)<br>ch 99 — (retired. do not ask.)</div>
+          <div class="csmono">ch 09 — the movies (awaiting first broadcast)<br>ch 10 — ??? (legal won't let us say)<br>ch 99 — (retired. do not ask.)</div>
           <div class="subcard">
             <b>subscribe today</b>
             <p>To never miss a broadcast, simply never close this tab. That's it. That's the whole subscription model.</p>
@@ -993,6 +997,11 @@
               <div class="ldesc">minigolf, but the physics took something personal. a cube, a hole, and a creeping sense of wrongness.</div>
               <div class="ltune">tune in →</div>
             </div>
+            <div class="listing" data-ch="08">
+              <div class="lhead"><span class="lch">CH 08</span><span class="lname">the graveyard shift</span><span class="lsig">signal <b>▮▮▮</b>▮</span></div>
+              <div class="ldesc">paid programming. a real browser extension that ambushes your doomscroll with a skill check. repair the gen, or get hooked.</div>
+              <div class="ltune">tune in →</div>
+            </div>
             <div class="listing" id="rumorlisting">
               <div class="lhead"><span class="lch">CH ??</span><span class="lname">rumored</span><span class="lsig">signal lost</span></div>
               <div class="ldesc">somewhere in the static, a channel is said to broadcast.</div>
@@ -1022,7 +1031,7 @@
 <script>
 const $ = s => document.querySelector(s);
 
-const ORDER = ['01','02','03','04','05','06','07','00'];
+const ORDER = ['01','02','03','04','05','06','07','08','00'];
 let cur = 0;
 let activeCh = null;
 let booted = false;
@@ -1611,14 +1620,22 @@ function syncUrl(ch){
   u.searchParams.delete('page');               // page is a load-time hint only
   history.replaceState(null, '', u);
 }
+let startTimer = null;
+const SETTLE = 120;
 function setChannel(ch){
   staticBurst(() => {
-    if(activeCh && mods[activeCh] && mods[activeCh].stop) mods[activeCh].stop();
+    if(activeCh && activeCh !== ch && mods[activeCh]){
+      if(mods[activeCh].stop) mods[activeCh].stop();
+      if(mods[activeCh].unmount) mods[activeCh].unmount();
+    }
     activate(ch);
-    if(mods[ch] && mods[ch].start) mods[ch].start();
     activeCh = ch;
     syncUrl(ch);
     document.body.classList.toggle('nosignal', ch === 'NS');
+    clearTimeout(startTimer);
+    startTimer = setTimeout(() => {
+      if(activeCh === ch && mods[ch] && mods[ch].start) mods[ch].start();
+    }, SETTLE);
   });
 }
 function flip(toIdx){
@@ -2073,6 +2090,8 @@ function dropBootOverlay(){
 mods['01'] = {
   start(){
     if(ch01View === null){ $('#ch01choose').classList.add('on'); return; }   // touch viewer hasn't chosen yet
+    const f01 = $('#ch01frame').getAttribute('src');
+    if(!f01 || f01 === 'about:blank') ch01Apply(ch01View);
     if(ch01View === 'museum' && desktopMuseum && !bootPlayed){
       bootPlayed = true;
       const bf = $('#bootframe');
@@ -2087,6 +2106,7 @@ mods['01'] = {
     dropBootOverlay();                // surfing away mid-boot ejects the disc
     ch01mod.stop();
   },
+  unmount(){ $('#ch01frame').src = 'about:blank'; },
   send: ch01mod.send
 };
 window.addEventListener('message', e => {
@@ -2096,8 +2116,8 @@ window.addEventListener('message', e => {
   }
 });
 
-mods['02'] = iframeChannel('#ch02frame');
-mods['03'] = iframeChannel('#ch03frame');
+mods['02'] = lazyChannel('#ch02frame', 'channels/02-teletext.html');
+mods['03'] = lazyChannel('#ch03frame', 'channels/03-teleshopping.html');
 
 /* ch 04, the arcade. a ~77MB Godot build, so the iframe stays empty until first tuned */
 mods['04'] = (function(){
@@ -2112,6 +2132,7 @@ mods['04'] = (function(){
       im.start();
     },
     stop(){ im.stop(); },
+    unmount(){ loaded = false; fr.src = 'about:blank'; },
     send: im.send
   };
 })();
@@ -2125,12 +2146,14 @@ function lazyChannel(frameSel, src){
   return {
     start(){ if(!loaded){ loaded = true; fr.src = src; } im.start(); },
     stop(){ im.stop(); },
+    unmount(){ loaded = false; fr.src = 'about:blank'; },
     send: im.send
   };
 }
 mods['05'] = lazyChannel('#ch05frame', 'channels/05-snake.html');
 mods['06'] = lazyChannel('#ch06frame', 'channels/06-clicker.html');
 mods['07'] = lazyChannel('#ch07frame', 'channels/07-golf.html');
+mods['08'] = lazyChannel('#ch08frame', 'channels/08-skillcheck.html');
 
 /* ---------- keys ---------- */
 window.addEventListener('keydown', e => {

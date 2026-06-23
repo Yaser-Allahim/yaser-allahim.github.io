@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CH 08 — The Graveyard Shift</title>
+<style>
+  :root{
+    --red:#e8433c; --gold:#f0d271; --green:#7ee0a8; --ink:#e9eaec; --fade:#9aa0a6;
+    --bg:#0b0809;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);
+    font-family:'Oswald','Bebas Neue',Arial Narrow,system-ui,sans-serif;color:var(--ink);
+    -webkit-user-select:none;user-select:none;cursor:default;}
+
+  #stage-bg{position:fixed;inset:0;
+    background:
+      radial-gradient(120% 120% at 50% 38%,rgba(40,12,12,.35),transparent 60%),
+      radial-gradient(140% 140% at 50% 50%,#160a0b 0%,#0b0809 55%,#050304 100%);}
+  #scan{position:fixed;inset:0;pointer-events:none;mix-blend-mode:overlay;opacity:.5;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,0) 0,rgba(0,0,0,0) 2px,rgba(0,0,0,.5) 3px);}
+  #vig{position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(120% 120% at 50% 50%,transparent 56%,rgba(0,0,0,.6) 100%);}
+
+  .marquee{position:fixed;top:0;left:0;right:0;height:30px;overflow:hidden;
+    background:linear-gradient(180deg,#1b0d0d,#120909);border-bottom:1px solid rgba(232,67,60,.4);
+    display:flex;align-items:center;z-index:6;}
+  .marquee .bug{flex:0 0 auto;background:var(--red);color:#120606;font-weight:700;
+    letter-spacing:.18em;font-size:11px;padding:5px 11px;margin-right:14px;text-transform:uppercase;
+    animation:bug 1.1s steps(1) infinite;}
+  @keyframes bug{50%{background:#7d1714;color:#e9aba8;}}
+  .marquee .track{white-space:nowrap;font-size:12px;letter-spacing:.26em;color:#d8b7b4;
+    text-transform:uppercase;animation:slide 26s linear infinite;}
+  @keyframes slide{from{transform:translateX(8vw);}to{transform:translateX(-100%);}}
+
+  .lower3{position:fixed;left:0;right:0;bottom:0;z-index:6;
+    background:linear-gradient(0deg,#120909,rgba(18,9,9,.86) 70%,transparent);
+    padding:12px 22px 14px;display:flex;align-items:flex-end;justify-content:space-between;gap:18px;}
+  .lower3 .brand{display:flex;align-items:flex-end;gap:14px;}
+  .lower3 .genicon{width:46px;height:46px;filter:drop-shadow(0 0 10px rgba(232,67,60,.45));}
+  .lower3 .title{line-height:1;}
+  .lower3 .title b{display:block;font-size:30px;letter-spacing:.05em;color:#fff;
+    text-shadow:0 0 18px rgba(232,67,60,.5),0 2px 4px #000;}
+  .lower3 .title span{display:block;font-size:12.5px;letter-spacing:.1em;color:var(--fade);margin-top:4px;}
+  .lower3 .phone{text-align:right;font-size:11px;letter-spacing:.12em;color:#b07c79;line-height:1.5;}
+  .lower3 .phone b{color:var(--gold);font-size:15px;letter-spacing:.08em;}
+
+  .col{position:fixed;left:50%;top:50%;transform:translate(-50%,-54%);
+    display:flex;flex-direction:column;align-items:center;z-index:4;}
+  .head{text-align:center;margin-bottom:8px;pointer-events:none;}
+  .head .t{font-size:15px;letter-spacing:.42em;color:var(--red);font-weight:600;
+    text-transform:uppercase;text-shadow:0 2px 12px rgba(0,0,0,.9);}
+  .head .s{font-size:12.5px;letter-spacing:.16em;color:var(--fade);margin-top:7px;}
+
+  .hud{display:flex;flex-direction:column;align-items:center;gap:7px;margin-bottom:10px;}
+  .hud .gen{font-size:12px;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;}
+  .hud .perks{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:420px;}
+  .hud .perk{font-size:10px;letter-spacing:.12em;color:#e8a39e;background:rgba(232,67,60,.1);
+    border:1px solid rgba(232,67,60,.3);border-radius:3px;padding:3px 8px;text-transform:uppercase;}
+  .hud .misses{display:flex;gap:7px;align-items:center;font-size:10px;letter-spacing:.2em;color:#8b8581;text-transform:uppercase;}
+  .hud .pip{width:11px;height:11px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);}
+  .hud .pip.on{background:var(--red);border-color:var(--red);box-shadow:0 0 9px rgba(232,67,60,.8);}
+
+  .stage{position:relative;width:300px;height:300px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .stage.shake{animation:shake .42s ease-in-out;}
+  @keyframes shake{0%,100%{transform:translate(0,0);}15%{transform:translate(-9px,4px) rotate(-1.2deg);}
+    30%{transform:translate(8px,-5px) rotate(1deg);}45%{transform:translate(-7px,-3px) rotate(-.8deg);}
+    60%{transform:translate(6px,5px) rotate(.7deg);}80%{transform:translate(-3px,2px);}}
+  canvas#dial{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
+  .needle{position:absolute;top:50%;left:50%;width:290px;height:290px;margin:-145px 0 0 -145px;
+    pointer-events:none;transition:opacity .1s;}
+  .needle>i{position:absolute;width:28px;height:200px;bottom:60%;left:calc(50% - 14px);
+    background:radial-gradient(red,rgba(22,4,4,0),transparent);}
+  .keycap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#2c2c2c;color:#fff;
+    border:1.5px solid #fff;border-radius:7px;padding:7px 16px;font-size:15px;letter-spacing:.06em;
+    box-shadow:0 2px 5px rgba(0,0,0,.4);white-space:nowrap;pointer-events:none;}
+  .storm{position:absolute;top:2px;left:0;right:0;text-align:center;pointer-events:none;font-size:15px;
+    font-weight:600;letter-spacing:.22em;color:var(--red);text-shadow:0 2px 10px rgba(0,0,0,.85);}
+  .idle{position:absolute;bottom:6px;left:0;right:0;text-align:center;pointer-events:none;}
+  .idle .a{font-size:15px;font-weight:500;letter-spacing:.16em;color:#aeb3b9;animation:pulse 3.4s ease-in-out infinite;}
+  .idle .b{font-size:11.5px;letter-spacing:.08em;color:#7d838b;margin-top:4px;}
+  @keyframes pulse{0%,100%{opacity:.5;}50%{opacity:.85;}}
+
+  .genwrap{width:300px;margin-top:18px;}
+  .genrow{display:flex;justify-content:space-between;font-size:12px;letter-spacing:.2em;color:#8b9097;margin-bottom:8px;}
+  .gentrack{height:14px;border-radius:3px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);overflow:hidden;}
+  .genfill{height:100%;width:0%;background:linear-gradient(90deg,#b88b2c,var(--gold));
+    box-shadow:0 0 14px rgba(240,210,113,.5);transition:width .25s ease;}
+
+  .events{position:fixed;left:3.2%;top:30%;display:flex;flex-direction:column;gap:12px;pointer-events:none;z-index:5;}
+  .ev{display:flex;align-items:center;gap:13px;animation:score 1.8s ease-out forwards;}
+  .ev img{width:46px;height:46px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.65));}
+  .ev .p{font-size:30px;font-weight:600;line-height:1;text-shadow:0 2px 12px rgba(0,0,0,.85);}
+  .ev .l{font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:#eef0f2;margin-top:5px;}
+  @keyframes score{0%{opacity:0;transform:translateX(-32px) scale(.95);}12%{opacity:1;transform:translateX(0) scale(1);}
+    80%{opacity:1;}100%{opacity:0;}}
+
+  .flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:3;
+    background:radial-gradient(circle at 50% 45%,rgba(190,40,34,.55),rgba(120,10,8,.2) 55%,transparent 80%);}
+  .flash.on{animation:flash .5s ease-out;}
+  @keyframes flash{0%{opacity:0;}12%{opacity:.85;}100%{opacity:0;}}
+
+  .ambush{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:7;
+    background:rgba(5,3,4,.55);opacity:0;pointer-events:none;transition:opacity .25s;}
+  .ambush.on{opacity:1;}
+  .ambush .a{text-align:center;}
+  .ambush .a b{display:block;font-size:46px;letter-spacing:.16em;color:var(--red);text-shadow:0 0 28px rgba(232,67,60,.6);}
+  .ambush .a span{display:block;margin-top:8px;font-size:13px;letter-spacing:.32em;color:var(--fade);text-transform:uppercase;}
+
+  .toast{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:7;pointer-events:none;}
+  .toast b{font-size:40px;letter-spacing:.1em;font-weight:700;opacity:0;animation:toast 1.4s ease-out forwards;}
+  @keyframes toast{0%{opacity:0;transform:scale(1.15);}18%{opacity:1;transform:scale(1);}72%{opacity:1;}100%{opacity:0;}}
+
+  #overlay{position:fixed;inset:0;z-index:9;display:flex;align-items:center;justify-content:center;
+    padding:28px;opacity:0;pointer-events:none;transition:opacity .35s ease;text-align:center;}
+  #overlay.on{opacity:1;pointer-events:auto;}
+  .ov-col{position:relative;width:100%;max-width:660px;}
+  @keyframes rise{0%{opacity:0;transform:translateY(16px);}100%{opacity:1;transform:translateY(0);}}
+  @keyframes slam{0%{opacity:0;transform:scale(1.18);}55%{opacity:1;transform:scale(.97);}100%{transform:scale(1);}}
+  @keyframes drop{0%{opacity:0;transform:translateY(-26px) scale(1.1);}60%{opacity:1;transform:translateY(4px) scale(.98);}100%{transform:translateY(0) scale(1);}}
+  @keyframes pop{0%{transform:scale(0);}60%{transform:scale(1.35);}100%{transform:scale(1);}}
+  @keyframes glowPulse{0%,100%{text-shadow:0 4px 30px rgba(0,0,0,.7);}50%{text-shadow:0 0 30px rgba(232,67,60,.6),0 4px 30px rgba(0,0,0,.7);}}
+  @keyframes greenPulse{0%,100%{text-shadow:0 0 30px rgba(126,224,168,.4);}50%{text-shadow:0 0 46px rgba(126,224,168,.8);}}
+  @keyframes idleP{0%,100%{opacity:.55;}50%{opacity:1;}}
+  .rise{animation:rise .5s ease-out both;}
+  .slam{animation:slam .55s cubic-bezier(.2,.85,.25,1) both;}
+  .ov-kicker{font-size:13px;letter-spacing:.4em;text-transform:uppercase;}
+  .ov-h1{font-size:54px;font-weight:700;letter-spacing:.04em;margin:8px 0 2px;}
+  .ov-p{font-size:16px;line-height:1.55;color:#cdb9b9;max-width:520px;margin:10px auto 20px;}
+  .ov-icon{width:104px;height:104px;object-fit:contain;animation:drop .6s cubic-bezier(.2,.85,.25,1) both,idleP 2.4s ease-in-out .7s infinite;}
+  .btn{display:inline-block;font-family:inherit;font-size:14px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;padding:13px 26px;border-radius:5px;cursor:pointer;text-decoration:none;
+    border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;
+    transition:transform .12s,filter .12s,box-shadow .12s;}
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.15);}
+  .btn:active{transform:translateY(1px);}
+  .btn.red{border-color:var(--red);background:linear-gradient(180deg,#d4332c,#9c1813);box-shadow:0 8px 26px rgba(180,20,18,.45);}
+  .btn.gold{border-color:var(--gold);background:linear-gradient(180deg,#d9b24a,#a07d20);color:#1a1205;box-shadow:0 8px 26px rgba(200,160,40,.35);}
+  .ov-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px;}
+  .ov-hint{font-size:11.5px;color:#7d838b;margin-top:14px;letter-spacing:.08em;}
+  .ov-hint b{color:var(--gold);}
+  .ov-sites{margin-top:12px;font-size:11px;letter-spacing:.14em;color:var(--fade);text-transform:uppercase;}
+  .ov-score{margin-top:14px;font-size:14px;letter-spacing:.08em;color:#cdc7c2;}
+  .ov-score b{color:var(--gold);font-size:20px;}
+  .ov-legal{margin-top:16px;font-size:9.5px;letter-spacing:.06em;color:#6a6460;line-height:1.5;}
+
+  #s-dial{position:relative;width:240px;height:240px;margin:16px auto 0;cursor:pointer;animation:slam .5s cubic-bezier(.2,.85,.25,1) both;}
+  #s-flash{position:absolute;inset:0;border-radius:50%;pointer-events:none;opacity:0;}
+  #s-canvas{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);}
+  #s-needle{position:absolute;top:50%;left:50%;width:240px;height:240px;margin:-120px 0 0 -120px;opacity:0;transition:opacity .1s;pointer-events:none;}
+  #s-needle>i{position:absolute;width:24px;height:160px;bottom:60%;left:calc(50% - 12px);background:radial-gradient(red,rgba(22,4,4,0),transparent);filter:drop-shadow(0 0 9px rgba(232,67,60,.85));}
+  #s-keycap{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#2c2c2c;color:#fff;border:1.5px solid #fff;border-radius:7px;padding:6px 14px;font-size:14px;pointer-events:none;white-space:nowrap;}
+  #slots{display:flex;gap:8px;justify-content:center;margin-top:20px;}
+  .slot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,.14);transition:background .2s;}
+  .slot.on{background:var(--green);box-shadow:0 0 10px rgba(126,224,168,.85);}
+
+  .hidden{display:none !important;}
+  .exit{position:fixed;top:38px;right:16px;z-index:6;font-size:10.5px;letter-spacing:.18em;
+    color:#8b8581;text-transform:uppercase;pointer-events:none;}
+  .exit b{color:var(--gold);}
+</style>
+</head>
+<body>
+  <div id="stage-bg"></div>
+  <div id="vig"></div>
+  <div class="flash" id="flash"></div>
+
+  <div class="marquee">
+    <span class="bug">Paid Programming</span>
+    <span class="track">Still scrolling at 3 a.m.? &nbsp;·&nbsp; Power three generators to escape the trial &nbsp;·&nbsp; The Entity is watching &nbsp;·&nbsp; Miss three checks and you get hooked &nbsp;·&nbsp; As seen on your own browser &nbsp;·&nbsp; Operators (one killer) standing by &nbsp;·&nbsp;</span>
+  </div>
+
+  <div class="exit">[<b>esc</b>] keep scrolling</div>
+
+  <div class="events" id="events"></div>
+
+  <div class="col" id="playview">
+    <div class="head">
+      <div class="t">Repair the generators to escape</div>
+      <div class="s">Your feed is paused. Land the skill checks.</div>
+    </div>
+    <div class="hud">
+      <div class="gen" id="genlbl">GEN 1 OF 3</div>
+      <div class="perks" id="perks"></div>
+      <div class="misses">caught in <span class="pip" id="m0"></span><span class="pip" id="m1"></span><span class="pip" id="m2"></span></div>
+    </div>
+    <div class="stage" id="stage">
+      <canvas id="dial" width="290" height="290"></canvas>
+      <div class="needle" id="needle" style="opacity:0"><i></i></div>
+      <div class="keycap" id="keycap">Space</div>
+      <div class="storm hidden" id="storm">MERCILESS STORM</div>
+      <div class="idle hidden" id="idle">
+        <div class="a">REPAIRING...</div>
+        <div class="b" id="idleb">Press Space or tap to repair</div>
+      </div>
+    </div>
+    <div class="genwrap">
+      <div class="genrow"><span>GENERATOR</span><span id="genlabel">0%</span></div>
+      <div class="gentrack"><div class="genfill" id="genfill"></div></div>
+    </div>
+  </div>
+
+  <div class="lower3">
+    <div class="brand">
+      <img class="genicon" src="skillcheck/generator.png" alt="">
+      <div class="title">
+        <b>DBD SKILL CHECK</b>
+        <span>the browser extension that ambushes your doomscroll</span>
+      </div>
+    </div>
+    <div class="phone">
+      <span id="statusline">gens powered: 0</span><br>
+      best: <b id="bestline">0</b>
+    </div>
+  </div>
+
+  <div class="ambush" id="ambush"><div class="a"><b>SKILL CHECK</b><span>incoming</span></div></div>
+  <div class="toast hidden" id="toast"><b id="toastb"></b></div>
+
+  <div id="overlay"></div>
+
+<script>
+(function () {
+  'use strict';
+  var ASSET = 'skillcheck/';
+  var REPO = 'https://github.com/Yaser-Allahim/dbd-skill-check';
+  var BEST_KEY = 'ysrtv-dbd-best';
+  var $ = function (id) { return document.getElementById(id); };
+  var rad = function (deg) { return Math.PI / 180 * deg; };
+
+  var HOOKS = {
+    1: { target: 5, dur: 980, great: 9, good: 24, radius: 102, lead: 360 },
+    2: { target: 6, dur: 760, great: 6, good: 16, radius: 92, lead: 240 }
+  };
+
+  function genSetup(mode, i) {
+    if (mode === 'trial') {
+      if (i === 0) return { checks: 7,  perks: { coulro: true }, label: 'GEN 1 OF 3' };
+      if (i === 1) return { checks: 9,  perks: { coulro: true, unnerving: 2, overcharge: true }, label: 'GEN 2 OF 3' };
+      return            { checks: 11, perks: { coulro: true, unnerving: 3, overcharge: true, merciless: true, lullaby: true }, label: 'GEN 3 OF 3' };
+    }
+    return { checks: 11, perks: { coulro: true, unnerving: 3, overcharge: true, merciless: true, lullaby: true, creep: i }, label: 'GEN ' + (i + 1) };
+  }
+  function perkTags(p) {
+    var t = [];
+    if (p.coulro) t.push('Coulrophobia');
+    if (p.unnerving) t.push('Unnerving ' + ['I', 'II', 'III'][p.unnerving - 1]);
+    if (p.overcharge) t.push('Overcharge');
+    if (p.merciless) t.push('Merciless Storm');
+    if (p.lullaby) t.push('Huntress Lullaby');
+    if (!t.length) t.push('Survivor (calm)');
+    return t;
+  }
+
+  var AudioKit = {
+    ctx: null, master: null, buffers: {}, vol: 1,
+    files: {
+      good: 'SkillCheckGood', great: 'SkillCheckBonus', sparks: 'GenSparks',
+      explode: 'GenFailExplode', open: 'SkillCheckOpen', endgame: 'EndGame',
+      alarm: 'ExitAlarm', piston: 'GenPiston', heart: 'HeartBeat',
+      lull1: 'HuntressLullaby1', lull2: 'HuntressLullaby2',
+      hooked: 'Hooked', sacrificed: 'Sacrificed'
+    },
+    init: function () {
+      if (this.ctx) return;
+      try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+      this.master = this.ctx.createGain();
+      this.master.gain.value = this.vol;
+      this.master.connect(this.ctx.destination);
+      var self = this;
+      Object.keys(this.files).forEach(function (k) {
+        fetch(ASSET + 'sfx/' + self.files[k] + '.ogg')
+          .then(function (r) { return r.arrayBuffer(); })
+          .then(function (b) { return self.ctx.decodeAudioData(b); })
+          .then(function (buf) { self.buffers[k] = buf; })
+          .catch(function () {});
+      });
+    },
+    resume: function () { if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
+    setVol: function (v) { this.vol = v; if (this.master) this.master.gain.value = v; },
+    play: function (name, opt) {
+      opt = opt || {};
+      if (!this.ctx || !this.buffers[name]) return null;
+      var src = this.ctx.createBufferSource();
+      src.buffer = this.buffers[name];
+      if (opt.loop) src.loop = true;
+      if (opt.rate) src.playbackRate.value = opt.rate;
+      var node = src;
+      if (opt.lowpass) { var lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = opt.lowpass; node.connect(lp); node = lp; }
+      var g = this.ctx.createGain();
+      g.gain.value = (opt.gain == null ? 1 : opt.gain);
+      node.connect(g); g.connect(this.master);
+      if (opt.echo) {
+        var d = this.ctx.createDelay(); d.delayTime.value = 0.34;
+        var fb = this.ctx.createGain(); fb.gain.value = 0.4;
+        g.connect(d); d.connect(fb); fb.connect(d); d.connect(this.master);
+      }
+      src.start();
+      return { src: src, gain: g };
+    }
+  };
+
+  var SC = {
+    dom: {}, ctx: null,
+    mode: 'trial', screen: 'playing', paused: true,
+    genIndex: 0, gensPowered: 0, best: 0,
+    perks: {}, checks: 5,
+    progress: 0, streak: 0, genMisses: 0, hooksUsed: 0,
+    angle: 0, omega: 360 / 1450, lastTs: null,
+    check: null, pending: null, pendingDelay: 0,
+    checkActive: false, checkStarted: false, armed: false,
+    storm: false, stormCount: 0, firstReveal: true,
+    rafId: null, armT: null, startT: null, nextT: null, stormT: null,
+    sStage: 1, sTarget: 5, sProg: 0,
+    sAngle: 0, sOmega: 0, sLastTs: null, sCheck: null, sActive: false, sStarted: false,
+    sRaf: null, sStartT: null, sNextT: null, sacT: null,
+    events: [], evId: 0,
+    pistons: [], heartSrc: null, heartGain: null, lullabyOn: false, lullabySrc: null, openSrc: null,
+
+    boot: function () {
+      this.dom = {
+        dial: $('dial'), needle: $('needle'), keycap: $('keycap'),
+        storm: $('storm'), idle: $('idle'),
+        genfill: $('genfill'), genlabel: $('genlabel'), events: $('events'),
+        flash: $('flash'), stage: $('stage'), ambush: $('ambush'),
+        genlbl: $('genlbl'), perks: $('perks'), playview: $('playview'),
+        statusline: $('statusline'), bestline: $('bestline'),
+        toast: $('toast'), toastb: $('toastb'), overlay: $('overlay')
+      };
+      this.ctx = this.dom.dial.getContext('2d');
+      try { this.best = parseInt(localStorage.getItem(BEST_KEY) || '0', 10) || 0; } catch (e) {}
+      this.dom.bestline.textContent = this.best;
+      var self = this;
+      this.dom.stage.addEventListener('click', function () { self.hit(); });
+      this.startRun('trial');
+      this.drawDial();
+    },
+
+    play: function () {
+      if (!this.paused) return;
+      this.paused = false;
+      AudioKit.init(); AudioKit.resume();
+      try { window.focus(); } catch (e) {}
+      this.dom.stage.focus && this.dom.stage.focus();
+      if (this.screen === 'playing') { this.updateRepairAudio(); this.scheduleNext(); }
+      else if (this.screen === 'struggling') { this.spawnStruggle(); }
+    },
+    pause: function () {
+      this.paused = true;
+      cancelAnimationFrame(this.rafId); cancelAnimationFrame(this.sRaf);
+      clearTimeout(this.armT); clearTimeout(this.startT); clearTimeout(this.nextT);
+      clearTimeout(this.stormT); clearTimeout(this.sStartT); clearTimeout(this.sNextT);
+      this.stopAmbience(); this.stopLullaby();
+      this.checkActive = false; this.armed = false; this.sActive = false;
+    },
+
+    startRun: function (mode) {
+      this.mode = mode;
+      this.genIndex = 0; this.gensPowered = 0; this.hooksUsed = 0;
+      this.hideOverlay();
+      this.startGen(0);
+    },
+    startGen: function (i) {
+      var s = genSetup(this.mode, i);
+      this.genIndex = i; this.perks = s.perks; this.checks = s.checks;
+      this.incGood = 100 / this.checks; this.incGreat = this.incGood * 1.25;
+      this.progress = 0; this.streak = 0; this.genMisses = 0;
+      this.screen = 'playing'; this.firstReveal = (i === 0);
+      this.checkActive = false; this.armed = false; this.storm = false; this.check = null;
+      this.dom.genlbl.textContent = s.label;
+      this.dom.perks.innerHTML = perkTags(this.perks).map(function (t) { return '<span class="perk">' + t + '</span>'; }).join('');
+      this.render(); this.drawDial();
+      if (!this.paused) { this.updateRepairAudio(); this.scheduleNext(); }
+    },
+
+    drawDial: function () {
+      var ctx = this.ctx, cv = this.dom.dial;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      var n = 145, o = 145, R = 130, i = 7.2, r = 4, c = this.check, col = '#ffffff';
+      if (!c || !this.checkActive) {
+        ctx.beginPath(); ctx.arc(n, o, R, 0, Math.PI * 2); ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.26)'; ctx.stroke();
+        return;
+      }
+      var gs = c.zoneStart - 90, ge = c.zoneStart + c.greatWidth - 90, gd = c.zoneStart + c.goodWidth - 90;
+      ctx.beginPath(); ctx.arc(n, o, R, rad(gd), rad(gs), false); ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(n, o, R, rad(gs), rad(ge), false); ctx.lineWidth = 2 * i + 1; ctx.strokeStyle = col; ctx.stroke();
+      ctx.beginPath(); ctx.arc(n, o, R - i, rad(gs), rad(gd), false); ctx.lineWidth = r; ctx.strokeStyle = col; ctx.stroke();
+      ctx.beginPath(); ctx.arc(n, o, R + i, rad(gs), rad(gd), false); ctx.lineWidth = r; ctx.strokeStyle = col; ctx.stroke();
+      ctx.beginPath(); ctx.arc(n, o, R, rad(gd) - 0.05, rad(gd), false); ctx.lineWidth = 2 * i + 1; ctx.strokeStyle = col; ctx.stroke();
+      ctx.beginPath(); ctx.arc(n, o, R, rad(gs), rad(gs) + 0.05, false); ctx.lineWidth = 2 * i + 1; ctx.strokeStyle = col; ctx.stroke();
+    },
+    renderNeedle: function () { this.dom.needle.style.transform = 'rotate(' + this.angle + 'deg)'; },
+    render: function () {
+      var active = !!(this.check && this.checkActive);
+      this.dom.keycap.classList.toggle('hidden', this.storm);
+      this.dom.storm.classList.toggle('hidden', !this.storm);
+      this.dom.idle.classList.toggle('hidden', active || this.storm);
+      this.dom.needle.style.opacity = active ? 1 : 0;
+      this.dom.genfill.style.width = this.progress + '%';
+      this.dom.genlabel.textContent = Math.round(this.progress) + '%';
+      this.dom.statusline.textContent = 'gens powered: ' + this.gensPowered;
+      for (var k = 0; k < 3; k++) $('m' + k).classList.toggle('on', this.genMisses > k);
+    },
+    addEvent: function (type) {
+      var points = '', label = '', color = '#f4f4ee';
+      if (type === 'great' || type === 'storm') { color = '#f0d271'; points = '+300'; label = 'Great Skill Check'; }
+      else if (type === 'good') { color = '#cfd2d6'; points = '+150'; label = 'Good Skill Check'; }
+      else if (type === 'done') { color = '#7ee0a8'; points = ''; label = 'Generator Powered'; }
+      else { color = '#e8433c'; points = ''; label = 'Skill Check Failed'; }
+      var id = ++this.evId, self = this;
+      this.events = [{ id: id, points: points, label: label, color: color }].concat(this.events).slice(0, 5);
+      this.renderEvents();
+      setTimeout(function () { self.events = self.events.filter(function (e) { return e.id !== id; }); self.renderEvents(); }, 1800);
+    },
+    renderEvents: function () {
+      this.dom.events.innerHTML = this.events.map(function (e) {
+        return '<div class="ev"><img src="' + ASSET + 'bloodpoints.png" alt="">'
+          + '<div><div class="p" style="color:' + e.color + '">' + e.points + '</div>'
+          + '<div class="l">' + e.label + '</div></div></div>';
+      }).join('');
+    },
+    shake: function () {
+      var s = this.dom.stage, f = this.dom.flash;
+      s.classList.remove('shake'); void s.offsetWidth; s.classList.add('shake');
+      f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+    },
+    toast: function (text, color) {
+      var t = this.dom.toast, b = this.dom.toastb;
+      b.textContent = text; b.style.color = color || '#fff';
+      t.classList.remove('hidden'); b.style.animation = 'none'; void b.offsetWidth; b.style.animation = '';
+      setTimeout(function () { t.classList.add('hidden'); }, 1400);
+    },
+
+    tick: function (ts) {
+      if (!this.checkActive || this.paused) return;
+      if (this.lastTs == null) this.lastTs = ts;
+      var dt = ts - this.lastTs; this.lastTs = ts;
+      this.angle += this.omega * dt;
+      var c = this.check;
+      if (c && this.angle > c.zoneStart + c.goodWidth + 5) { this.resolve('miss'); return; }
+      if (this.angle >= 359) { this.resolve('miss'); return; }
+      this.renderNeedle();
+      var self = this;
+      this.rafId = requestAnimationFrame(function (t) { self.tick(t); });
+    },
+    spawnCheck: function () {
+      if (this.screen !== 'playing' || this.paused || this.checkActive || this.armed || this.storm) return;
+      AudioKit.resume();
+      var pk = this.perks;
+      var dur = 1450;
+      if (pk.coulro) dur /= 1.5;
+      if (pk.creep) dur /= (1 + Math.min(0.55, pk.creep * 0.05));
+      this.omega = 360 / dur;
+      var zs = 1.4, great = 10 * zs, success = 50 * zs;
+      if (pk.unnerving) success *= (1 - [0.4, 0.5, 0.6][pk.unnerving - 1]);
+      var good = great + success;
+      var lo = 110, hi = 250; if (pk.overcharge) { lo = 80; hi = 292; }
+      lo = Math.max(lo, 350 * 360 / dur);
+      hi = Math.min(hi, 351 - good);
+      if (hi < lo + 24) lo = Math.max(60, hi - 24);
+      var zoneStart = lo + Math.random() * Math.max(0, hi - lo);
+      this.pending = { zoneStart: zoneStart, goodWidth: good, greatWidth: great };
+      this.pendingDelay = pk.lullaby ? 150 : 480;
+      var lead = pk.lullaby ? 90 : 200;
+      if (this.openSrc) { try { this.openSrc.stop(); } catch (e) {} }
+      var op = AudioKit.play('open', { gain: 0.5 }); this.openSrc = op && op.src;
+      this.armed = true; clearTimeout(this.armT);
+      var self = this;
+      this.armT = setTimeout(function () { self.revealCheck(); }, lead);
+    },
+    revealCheck: function () {
+      var p = this.pending; if (!p || this.screen !== 'playing' || this.paused) return;
+      this.armed = false; this.angle = 0; this.lastTs = null;
+      this.checkActive = true; this.checkStarted = false;
+      this.check = { zoneStart: p.zoneStart, goodWidth: p.goodWidth, greatWidth: p.greatWidth };
+      this.render(); this.drawDial(); this.renderNeedle();
+      if (this.firstReveal) { this.firstReveal = false; this.flashAmbush(); }
+      var self = this;
+      clearTimeout(this.startT);
+      this.startT = setTimeout(function () { self.startCheck(); }, this.pendingDelay);
+    },
+    startCheck: function () {
+      if (!this.checkActive || this.checkStarted || this.paused) return;
+      this.checkStarted = true; this.lastTs = null;
+      cancelAnimationFrame(this.rafId);
+      var self = this;
+      this.rafId = requestAnimationFrame(function (t) { self.tick(t); });
+    },
+    flashAmbush: function () {
+      var a = this.dom.ambush; a.classList.add('on');
+      setTimeout(function () { a.classList.remove('on'); }, 620);
+    },
+    hit: function () {
+      AudioKit.init(); AudioKit.resume();
+      if (this.screen === 'struggling') { this.struggleHit(); return; }
+      if (this.screen !== 'playing' || this.paused) return;
+      if (this.checkActive) {
+        if (!this.checkStarted) return;
+        var a = this.angle, c = this.check;
+        if (a >= c.zoneStart && a <= c.zoneStart + c.greatWidth) this.resolve('great');
+        else if (a > c.zoneStart + c.greatWidth && a <= c.zoneStart + c.goodWidth) this.resolve('good');
+        else this.resolve('miss');
+      } else if (this.storm || this.armed) { return; }
+      else { this.spawnCheck(); }
+    },
+    registerMiss: function () {
+      this.progress = Math.max(0, this.progress - 8); this.streak = 0;
+      AudioKit.play('explode', { gain: 0.95 }); this.shake(); this.addEvent('miss');
+      this.genMisses++;
+      this.render();
+      if (this.genMisses >= 3) { this.getCaught(); return true; }
+      return false;
+    },
+    resolve: function (type) {
+      if (!this.checkActive) return;
+      this.checkActive = false; cancelAnimationFrame(this.rafId);
+      if (this.check && this.check.storm) { this.resolveStorm(type); return; }
+      if (type === 'miss') { this.check = null; this.drawDial(); this.updateRepairAudio(); if (!this.registerMiss()) this.scheduleNext(); return; }
+      if (type === 'great') { this.progress += this.incGreat; this.streak++; AudioKit.play('great', { gain: 0.34 }); AudioKit.play('sparks', { gain: 0.4 }); this.addEvent('great'); }
+      else { this.progress += this.incGood; this.streak++; AudioKit.play('good', { gain: 0.3 }); this.addEvent('good'); }
+      this.progress = Math.min(100, this.progress);
+      var triggerStorm = false;
+      if (this.perks.merciless && this.progress >= 90 && this.progress < 100) { this.progress = 90; triggerStorm = true; }
+      var done = !triggerStorm && this.progress >= 100;
+      this.check = null; this.render(); this.drawDial(); this.updateRepairAudio();
+      if (triggerStorm) this.startStorm();
+      else if (done) this.complete();
+      else this.scheduleNext();
+    },
+    scheduleNext: function () {
+      clearTimeout(this.nextT);
+      var self = this;
+      this.nextT = setTimeout(function () {
+        if (self.screen === 'playing' && !self.paused && !self.checkActive && !self.armed && !self.storm) self.spawnCheck();
+      }, 500 + Math.random() * 650);
+    },
+
+    startStorm: function () {
+      if (this.storm) return;
+      clearTimeout(this.nextT); this.stormCount = 0; this.storm = true;
+      this.render(); this.updateRepairAudio(); this.spawnStormCheck();
+    },
+    spawnStormCheck: function () {
+      if (!this.storm || this.screen !== 'playing' || this.paused) return;
+      this.omega = 360 / 1120;
+      var n = this.stormCount || 0, factor = Math.max(0.32, 1 - n * 0.15);
+      var zs = 1.4, great = 10 * zs * factor, success = 50 * zs * factor, good = great + success;
+      var zoneStart = 110 + Math.random() * 140;
+      this.angle = 0; this.lastTs = null; this.checkActive = true; this.checkStarted = true;
+      this.check = { zoneStart: zoneStart, goodWidth: good, greatWidth: great, storm: true };
+      this.render(); this.drawDial(); this.renderNeedle();
+      cancelAnimationFrame(this.rafId);
+      var self = this;
+      this.rafId = requestAnimationFrame(function (t) { self.tick(t); });
+    },
+    resolveStorm: function (type) {
+      if (type === 'miss') {
+        this.storm = false; this.check = null; this.drawDial(); this.updateRepairAudio();
+        if (!this.registerMiss()) this.scheduleNext();
+        return;
+      }
+      this.stormCount++; AudioKit.play('good', { gain: 0.3 }); this.addEvent('storm');
+      this.progress = Math.min(100, this.progress + 2.2); this.check = null;
+      this.render(); this.drawDial(); this.updateRepairAudio();
+      if (this.progress >= 100) { this.storm = false; this.complete(); }
+      else { clearTimeout(this.stormT); var self = this; this.stormT = setTimeout(function () { self.spawnStormCheck(); }, 320); }
+    },
+
+    complete: function () {
+      this.checkActive = false; cancelAnimationFrame(this.rafId);
+      clearTimeout(this.nextT); clearTimeout(this.startT); clearTimeout(this.stormT);
+      this.stopAmbience(); this.stopLullaby();
+      this.addEvent('done'); this.storm = false; this.check = null;
+      this.progress = 100; this.gensPowered++; this.genMisses = 0;
+      this.render(); this.drawDial();
+      AudioKit.play('endgame', { gain: 0.9 });
+      AudioKit.play('alarm', { gain: 0.4, lowpass: 480, echo: true });
+      if (this.mode === 'trial' && this.genIndex >= 2) { this.win(); return; }
+      this.toast('GENERATOR POWERED', '#7ee0a8');
+      var self = this;
+      setTimeout(function () { self.startGen(self.genIndex + 1); }, 1500);
+    },
+
+    getCaught: function () {
+      cancelAnimationFrame(this.rafId);
+      clearTimeout(this.nextT); clearTimeout(this.armT); clearTimeout(this.startT); clearTimeout(this.stormT);
+      this.stopAmbience(); this.stopLullaby();
+      this.checkActive = false; this.armed = false; this.storm = false; this.check = null;
+      if (this.hooksUsed >= 2) { this.gameOver('sacrificed'); return; }
+      this.hooksUsed++; this.sStage = this.hooksUsed;
+      this.screen = 'hooked';
+      AudioKit.play('hooked', { gain: 0.9 });
+      this.showHook();
+    },
+    showHook: function () {
+      var stage = this.sStage, used = this.hooksUsed;
+      var pip = function (on) { return '<span style="width:13px;height:13px;border-radius:50%;border:1px solid rgba(255,255,255,.22);display:inline-block;background:' + (on ? '#e8433c' : 'rgba(255,255,255,.12)') + ';box-shadow:' + (on ? '0 0 12px rgba(232,67,60,.85)' : 'none') + ';"></span>'; };
+      var html = '<div class="ov-col" style="--c:#e8433c;">'
+        + '<img class="ov-icon" src="' + ASSET + 'icon-hook.png" alt="" style="filter:brightness(1.7) drop-shadow(0 0 26px rgba(232,67,60,.9));">'
+        + '<div class="rise ov-kicker" style="color:#e8665e;animation-delay:.06s;">The Entity has you</div>'
+        + '<div class="slam ov-h1" style="color:#f4ecec;text-shadow:0 4px 30px rgba(0,0,0,.8);animation-delay:.1s;">YOU HAVE BEEN HOOKED</div>'
+        + '<div class="rise" style="animation-delay:.18s;display:flex;gap:10px;align-items:center;justify-content:center;margin:14px 0 16px;">'
+        + '<span style="font-size:12px;letter-spacing:.28em;color:#9aa0a6;">HOOK ' + stage + ' OF 2</span>' + pip(used >= 1) + pip(used >= 2) + '</div>'
+        + '<p class="rise ov-p" style="animation-delay:.24s;">You missed three checks on the generator. The Killer strung you up. Struggle free to drop back into the trial. Miss one check and you are <span style="color:#e8665e;font-weight:600;">Sacrificed</span>.</p>'
+        + '<div class="ov-row rise" style="animation-delay:.32s;"><button class="btn red" id="begin">Begin struggle</button></div>'
+        + '<div class="rise ov-hint" style="animation-delay:.4s;">Press <b>space</b> or click to start. The struggle window is tighter than a gen.</div>'
+        + '</div>';
+      var self = this;
+      this.showOverlay(html, function () {
+        var b = $('begin'); if (b) b.addEventListener('click', function () { self.beginStruggle(); });
+      });
+    },
+    beginStruggle: function () {
+      if (this.screen !== 'hooked') return;
+      AudioKit.resume();
+      this.screen = 'struggling'; this.sProg = 0; this.sTarget = HOOKS[this.sStage].target;
+      var key = 'Space', harder = this.sStage >= 2;
+      var html = '<div class="ov-col">'
+        + '<div class="rise ov-kicker" style="color:#e8665e;">Struggle free</div>'
+        + (harder ? '<div class="rise" style="animation-delay:.08s;font-size:13px;letter-spacing:.2em;color:#f0d271;margin-top:5px;">SECOND HOOK. THE WINDOW IS SMALLER.</div>' : '')
+        + '<div id="s-dial">'
+        + '<div id="s-flash"></div>'
+        + '<canvas id="s-canvas" width="240" height="240"></canvas>'
+        + '<div id="s-needle"><i></i></div>'
+        + '<div id="s-keycap">' + key + '</div>'
+        + '</div>'
+        + '<div id="slots"></div>'
+        + '<div id="s-cap" class="rise" style="animation-delay:.16s;font-size:13px;color:#9aa0a6;letter-spacing:.08em;margin-top:16px;">Hit the red zone. One miss and you are sacrificed.</div>'
+        + '</div>';
+      var self = this;
+      this.showOverlay(html, function () {
+        self.sCanvas = $('s-canvas'); self.sNeedle = $('s-needle'); self.slotsEl = $('slots');
+        self.sDialEl = $('s-dial'); self.sFlashEl = $('s-flash'); self.sCapEl = $('s-cap');
+        self.sDialEl.addEventListener('click', function () { self.struggleHit(); });
+        self.drawStruggle(); self.renderSNeedle(); self.renderSlots();
+        requestAnimationFrame(function () { self.spawnStruggle(); });
+      });
+    },
+    spawnStruggle: function () {
+      if (this.screen !== 'struggling' || this.paused) return;
+      var cfg = HOOKS[this.sStage];
+      this.sOmega = 360 / cfg.dur;
+      this.sCheck = { zoneStart: 110 + Math.random() * 140, goodWidth: cfg.good, greatWidth: cfg.great };
+      this.sAngle = 0; this.sLastTs = null; this.sActive = true; this.sStarted = false;
+      AudioKit.play('open', { gain: 0.5, rate: 1.15 });
+      this.drawStruggle(); this.renderSNeedle();
+      var self = this;
+      clearTimeout(this.sStartT);
+      this.sStartT = setTimeout(function () { self.startSweep(); }, cfg.lead);
+    },
+    startSweep: function () {
+      if (!this.sActive || this.sStarted || this.screen !== 'struggling' || this.paused) return;
+      this.sStarted = true; this.sLastTs = null;
+      cancelAnimationFrame(this.sRaf);
+      var self = this;
+      this.sRaf = requestAnimationFrame(function (t) { self.sTick(t); });
+    },
+    sTick: function (ts) {
+      if (!this.sActive || this.paused) return;
+      if (this.sLastTs == null) this.sLastTs = ts;
+      var dt = ts - this.sLastTs; this.sLastTs = ts;
+      this.sAngle += this.sOmega * dt;
+      var c = this.sCheck;
+      if (c && this.sAngle > c.zoneStart + c.goodWidth + 5) { this.struggleResolve('miss'); return; }
+      if (this.sAngle >= 359) { this.struggleResolve('miss'); return; }
+      this.renderSNeedle();
+      var self = this;
+      this.sRaf = requestAnimationFrame(function (t) { self.sTick(t); });
+    },
+    struggleHit: function () {
+      if (this.screen !== 'struggling' || !this.sActive || !this.sStarted) return;
+      var a = this.sAngle, c = this.sCheck;
+      if (a >= c.zoneStart && a <= c.zoneStart + c.goodWidth) this.struggleResolve('hit');
+      else this.struggleResolve('miss');
+    },
+    struggleResolve: function (type) {
+      if (!this.sActive) return;
+      this.sActive = false; this.sStarted = false; cancelAnimationFrame(this.sRaf); clearTimeout(this.sStartT);
+      if (type === 'miss') {
+        AudioKit.play('explode', { gain: 0.8 });
+        this.sCheck = null; this.drawStruggle(); this.renderSNeedle();
+        this.flashDial('bad'); this.shakeDial();
+        var self0 = this;
+        clearTimeout(this.sNextT); this.sNextT = setTimeout(function () { self0.gameOver('sacrificed'); }, 460);
+        return;
+      }
+      AudioKit.play('good', { gain: 0.34 });
+      this.sProg++;
+      this.sCheck = null; this.drawStruggle(); this.renderSNeedle(); this.renderSlots(); this.flashDial('good');
+      if (this.sProg >= this.sTarget) { this.struggleWin(); return; }
+      var self = this;
+      clearTimeout(this.sNextT); this.sNextT = setTimeout(function () { self.spawnStruggle(); }, 360);
+    },
+    struggleWin: function () {
+      this.sActive = false; cancelAnimationFrame(this.sRaf); clearTimeout(this.sNextT);
+      AudioKit.play('great', { gain: 0.4 }); AudioKit.play('sparks', { gain: 0.4 });
+      this.hideOverlay();
+      this.screen = 'playing'; this.genMisses = 0;
+      this.toast('WRENCHED FREE', '#7ee0a8');
+      this.render(); this.drawDial();
+      if (!this.paused) { this.updateRepairAudio(); this.scheduleNext(); }
+    },
+    drawStruggle: function () {
+      var cv = this.sCanvas; if (!cv) return;
+      var ctx = cv.getContext('2d');
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      var cfg = HOOKS[this.sStage];
+      var n = cv.width / 2, o = cv.height / 2, R = cfg.radius, i = 6.4, r = 3.4, c = this.sCheck, col = '#e8433c';
+      ctx.beginPath(); ctx.arc(n, o, R, 0, Math.PI * 2); ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.stroke();
+      if (!c || !this.sActive) return;
+      var gs = c.zoneStart - 90, gd = c.zoneStart + c.goodWidth - 90;
+      ctx.beginPath(); ctx.arc(n, o, R, rad(gd), rad(gs), false); ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(n, o, R, rad(gs), rad(gd), false); ctx.lineWidth = 2 * i + 1; ctx.strokeStyle = col; ctx.stroke();
+      ctx.beginPath(); ctx.arc(n, o, R - i, rad(gs), rad(gd), false); ctx.lineWidth = r; ctx.strokeStyle = col; ctx.stroke();
+      ctx.beginPath(); ctx.arc(n, o, R + i, rad(gs), rad(gd), false); ctx.lineWidth = r; ctx.strokeStyle = col; ctx.stroke();
+    },
+    renderSNeedle: function () { if (this.sNeedle) { this.sNeedle.style.transform = 'rotate(' + this.sAngle + 'deg)'; this.sNeedle.style.opacity = this.sActive ? 1 : 0; } },
+    renderSlots: function () {
+      if (this.slotsEl) {
+        var h = '';
+        for (var i = 0; i < this.sTarget; i++) h += '<span class="slot' + (i < this.sProg ? ' on' : '') + '"></span>';
+        this.slotsEl.innerHTML = h;
+      }
+      if (this.sCapEl) this.sCapEl.textContent = 'Hit the red zone. ' + this.sProg + ' / ' + this.sTarget + '. One miss and you are sacrificed.';
+    },
+    flashDial: function (kind) {
+      var f = this.sFlashEl; if (!f) return;
+      f.style.background = kind === 'good'
+        ? 'radial-gradient(circle at 50% 50%,rgba(126,224,168,0.5),transparent 70%)'
+        : 'radial-gradient(circle at 50% 50%,rgba(232,67,60,0.6),transparent 72%)';
+      f.style.animation = 'none'; void f.offsetWidth; f.style.animation = 'flash .45s ease-out';
+    },
+    shakeDial: function () { var d = this.sDialEl; if (!d) return; d.style.animation = 'none'; void d.offsetWidth; d.style.animation = 'shake .42s ease-in-out'; },
+
+    win: function () {
+      this.screen = 'over';
+      this.saveBest();
+      AudioKit.play('endgame', { gain: 0.9 });
+      this.showOver('won');
+    },
+    gameOver: function (result) {
+      this.screen = 'over';
+      AudioKit.play('sacrificed', { gain: 0.95 });
+      this.saveBest();
+      this.showOver(result);
+    },
+    saveBest: function () {
+      if (this.gensPowered > this.best) {
+        this.best = this.gensPowered;
+        try { localStorage.setItem(BEST_KEY, String(this.best)); } catch (e) {}
+        this.dom.bestline.textContent = this.best;
+      }
+    },
+    showOver: function (result) {
+      var won = result === 'won';
+      var head, kick, icon = '', sub;
+      if (won) {
+        kick = '<div class="ov-kicker" style="color:#7ee0a8;">The gates are powered</div>';
+        head = '<div class="ov-h1" style="color:#d8f5e4;animation:slam .55s cubic-bezier(.2,.85,.25,1) both,greenPulse 2.2s ease-in-out .6s infinite;animation-delay:.08s;">YOU ESCAPED THE TRIAL</div>';
+        sub = 'Three generators, every perk stacked against you, and you walked out. Now imagine this jumping you mid-scroll on YouTube.';
+      } else {
+        kick = '<div class="ov-kicker" style="color:#e8665e;">Sacrificed to the Entity</div>';
+        icon = '<img class="ov-icon" src="' + ASSET + 'icon-sacrificed.png" alt="" style="width:120px;height:auto;filter:brightness(1.8) drop-shadow(0 0 30px rgba(232,67,60,.95));">';
+        head = '<div class="ov-h1" style="color:#e8433c;text-shadow:0 4px 30px rgba(0,0,0,.85);animation:slam .55s cubic-bezier(.2,.85,.25,1) both;animation-delay:.08s;">SACRIFICED</div>';
+        sub = (this.mode === 'endless')
+          ? 'The run ends here. The real extension would now lock you out of the site for a timeout.'
+          : 'The Killer got you before the third gen. The real extension would now hook you for real and lock the site.';
+      }
+      var scoreLine = (this.mode === 'endless')
+        ? '<div class="ov-score">generators powered: <b>' + this.gensPowered + '</b> &nbsp;·&nbsp; best: <b>' + this.best + '</b></div>'
+        : '';
+      var html = '<div class="ov-col">'
+        + icon
+        + '<div class="rise" style="animation-delay:.04s;">' + kick + '</div>'
+        + head
+        + '<p class="rise ov-p" style="animation-delay:.2s;">' + sub + '</p>'
+        + scoreLine
+        + '<div class="ov-sites rise" style="animation-delay:.26s;">youtube · tiktok · instagram · facebook · reddit · x</div>'
+        + '<div class="ov-row rise" style="animation-delay:.34s;margin-top:18px;">'
+        + '<a class="btn gold" id="gh" href="' + REPO + '" target="_blank" rel="noopener">Get it on GitHub →</a>'
+        + '<button class="btn red" id="retry">Try the trial again</button>'
+        + '<button class="btn" id="endless">Endless mode</button>'
+        + '</div>'
+        + '<div class="rise ov-hint" style="animation-delay:.42s;">[<b>space</b>] trial &nbsp;&nbsp; [<b>e</b>] endless &nbsp;&nbsp; [<b>esc</b>] keep scrolling</div>'
+        + '<div class="ov-legal rise" style="animation-delay:.48s;">A homage. Sounds and art belong to Behaviour Interactive. Dead by Daylight is their trademark, not mine.</div>'
+        + '</div>';
+      var self = this;
+      this.showOverlay(html, function () {
+        var r = $('retry'); if (r) r.addEventListener('click', function () { self.startRun('trial'); });
+        var e = $('endless'); if (e) e.addEventListener('click', function () { self.startRun('endless'); });
+      });
+    },
+
+    updateRepairAudio: function () {
+      if (!AudioKit.ctx) return;
+      var p = this.progress;
+      this.updatePistons(p);
+      if (p >= 5) { this.startHeart(); this.setHeart(p); } else this.stopHeart();
+      if (this.perks.lullaby) this.startLullaby(); else this.stopLullaby();
+    },
+    updatePistons: function (p) {
+      var seg = 100 / 6, rates = [0.92, 1.0, 1.1];
+      for (var i = 0; i < 6; i++) {
+        var sp = i * seg;
+        if (p >= sp) {
+          if (!this.pistons[i]) this.startPiston(i);
+          var local = Math.min(1, (p - sp) / seg), level = Math.min(2, Math.floor(local * 3));
+          if (this.pistons[i] && AudioKit.ctx) this.pistons[i].src.playbackRate.setTargetAtTime(rates[level] * this.pistons[i].detune, AudioKit.ctx.currentTime, 0.12);
+        }
+      }
+    },
+    startPiston: function (i) {
+      if (!AudioKit.buffers.piston || this.pistons[i] || !AudioKit.ctx) return;
+      var ac = AudioKit.ctx, src = ac.createBufferSource();
+      src.buffer = AudioKit.buffers.piston; src.loop = true; src.playbackRate.value = 0.92;
+      var g = ac.createGain(); g.gain.value = 0.0001; src.connect(g); g.connect(AudioKit.master);
+      src.start(0, Math.random() * AudioKit.buffers.piston.duration);
+      g.gain.exponentialRampToValueAtTime(0.22, ac.currentTime + 0.25);
+      this.pistons[i] = { src: src, g: g, detune: 0.86 + Math.random() * 0.28 };
+    },
+    startHeart: function () {
+      if (this.heartSrc || !AudioKit.buffers.heart || !AudioKit.ctx) return;
+      var ac = AudioKit.ctx, src = ac.createBufferSource();
+      src.buffer = AudioKit.buffers.heart; src.loop = true;
+      var g = ac.createGain(); g.gain.value = 0.0001; src.connect(g); g.connect(AudioKit.master);
+      src.start(); this.heartSrc = src; this.heartGain = g;
+    },
+    setHeart: function (p) {
+      if (!this.heartSrc || !AudioKit.ctx) return;
+      var f = Math.min(1, Math.max(0, (p - 5) / 95));
+      this.heartSrc.playbackRate.setTargetAtTime(1 + f * 0.42, AudioKit.ctx.currentTime, 0.2);
+      this.heartGain.gain.setTargetAtTime(0.18 + f * 0.32, AudioKit.ctx.currentTime, 0.2);
+    },
+    stopHeart: function () {
+      if (!this.heartSrc || !AudioKit.ctx) return;
+      var s = this.heartSrc;
+      try { this.heartGain.gain.setTargetAtTime(0.0001, AudioKit.ctx.currentTime, 0.15); } catch (e) {}
+      setTimeout(function () { try { s.stop(); } catch (e) {} }, 420);
+      this.heartSrc = null; this.heartGain = null;
+    },
+    startLullaby: function () {
+      if (this.lullabyOn || !AudioKit.buffers.lull2 || !AudioKit.ctx) return;
+      this.lullabyOn = true; var self = this;
+      if (AudioKit.buffers.lull1) this.playLullaby('lull1', false, function () { if (self.lullabyOn) self.playLullaby('lull2', true); });
+      else this.playLullaby('lull2', true);
+    },
+    playLullaby: function (name, loop, onend) {
+      var ac = AudioKit.ctx, buf = AudioKit.buffers[name]; if (!ac || !buf) return;
+      var src = ac.createBufferSource(); src.buffer = buf; src.loop = loop;
+      var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 620;
+      var g = ac.createGain(); g.gain.value = 0.2; src.connect(lp); lp.connect(g); g.connect(AudioKit.master);
+      if (onend) src.onended = onend;
+      src.start(); this.lullabySrc = src;
+    },
+    stopLullaby: function () {
+      this.lullabyOn = false;
+      if (this.lullabySrc) { var s = this.lullabySrc; this.lullabySrc = null; try { s.onended = null; s.stop(); } catch (e) {} }
+    },
+    stopAmbience: function () {
+      this.pistons.forEach(function (pv) {
+        if (!pv || !AudioKit.ctx) return; var s = pv.src;
+        try { pv.g.gain.setTargetAtTime(0.0001, AudioKit.ctx.currentTime, 0.12); } catch (e) {}
+        setTimeout(function () { try { s.stop(); } catch (e) {} }, 340);
+      });
+      this.pistons = [];
+      this.stopHeart();
+    },
+
+    showOverlay: function (html, onMount) {
+      this.dom.playview.style.opacity = '0.12';
+      this.dom.overlay.innerHTML = html;
+      this.dom.overlay.classList.add('on');
+      if (onMount) onMount();
+    },
+    hideOverlay: function () {
+      this.dom.overlay.classList.remove('on');
+      this.dom.overlay.innerHTML = '';
+      this.dom.playview.style.opacity = '';
+    }
+  };
+
+  function surf() { try { parent.postMessage({ type: 'shellkey', key: 'space' }, '*'); } catch (e) {} }
+  function guide() { try { parent.postMessage({ type: 'shellkey', key: 'g' }, '*'); } catch (e) {} }
+
+  window.addEventListener('keydown', function (e) {
+    var k = e.key;
+    if (k === 'g' || k === 'G') { e.preventDefault(); guide(); return; }
+    if (k === 'Escape') { e.preventDefault(); surf(); return; }
+    if (SC.screen === 'over') {
+      if (k === 'e' || k === 'E') { e.preventDefault(); SC.startRun('endless'); return; }
+      if (e.code === 'Space' || k === ' ') { e.preventDefault(); SC.startRun('trial'); return; }
+      return;
+    }
+    if (e.code === 'Space' || k === ' ') {
+      e.preventDefault();
+      if (SC.screen === 'hooked') SC.beginStruggle();
+      else SC.hit();
+    }
+  }, true);
+
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (d.type !== 'channel') return;
+    if (d.action === 'play') SC.play();
+    else if (d.action === 'pause') SC.pause();
+    if (typeof d.volume === 'number') { AudioKit.vol = d.volume; AudioKit.setVol(d.volume); }
+  });
+
+  SC.boot();
+  window.YSRChannel = { play: function () { SC.play(); }, pause: function () { SC.pause(); } };
+  if (document.readyState === 'complete') SC.play();
+  else window.addEventListener('load', function () { SC.play(); });
+})();
+</script>
+</body>
+</html>
